@@ -327,38 +327,28 @@ export const YamlForm: React.FC = () => {
 
         {param.type === 'authentication' && (
           <div className="space-y-2">
-            <div className="space-y-1">
-              <label className="block text-sm text-gray-600">Authentication Type</label>
-              <p className="text-xs text-gray-500 mb-1">Select the type of authentication required for your API</p>
-              <select
-                value={param.auth_type}
-                onChange={(e) => {
-                  const newSource = [...formData.interface_parameters.section.source];
-                  newSource[index] = { ...param, auth_type: e.target.value as AuthType };
-                  setFormData({
-                    ...formData,
-                    interface_parameters: {
-                      section: {
-                        source: newSource
-                      }
+            <select
+              value={param.auth_type}
+              onChange={(e) => {
+                const newSource = [...formData.interface_parameters.section.source];
+                newSource[index] = { ...param, auth_type: e.target.value as AuthType };
+                setFormData({
+                  ...formData,
+                  interface_parameters: {
+                    section: {
+                      source: newSource
                     }
-                  });
-                }}
-                className="w-full p-2 border rounded"
-              >
-                <option value="basic_http">Basic HTTP</option>
-                <option value="bearer">Bearer Token</option>
-                <option value="api_token">API Token</option>
-              </select>
-            </div>
+                  }
+                });
+              }}
+              className="w-full p-2 border rounded"
+            >
+              <option value="basic_http">Basic HTTP</option>
+              <option value="bearer">Bearer Token</option>
+              <option value="api_token">API Token</option>
+            </select>
             {param.fields?.map((field, fieldIndex) => (
               <div key={fieldIndex} className="space-y-1">
-                <label className="block text-sm text-gray-600">{field.name}</label>
-                <p className="text-xs text-gray-500 mb-1">
-                  {field.name === 'username' ? 'Enter the username for authentication' : 
-                   field.name === 'password' ? 'Enter the password or token' : 
-                   'Enter the authentication value'}
-                </p>
                 <input
                   type="text"
                   placeholder={`${field.name} Value`}
@@ -386,35 +376,28 @@ export const YamlForm: React.FC = () => {
 
         {param.type === 'date_range' && (
           <div className="space-y-2">
-            <div className="space-y-1">
-              <label className="block text-sm text-gray-600">Period Type</label>
-              <p className="text-xs text-gray-500 mb-1">Choose whether to use date only or include time</p>
-              <select
-                value={param.period_type}
-                onChange={(e) => {
-                  const newSource = [...formData.interface_parameters.section.source];
-                  newSource[index] = { ...param, period_type: e.target.value as 'date' | 'datetime' };
-                  setFormData({
-                    ...formData,
-                    interface_parameters: {
-                      section: {
-                        source: newSource
-                      }
+            <select
+              value={param.period_type}
+              onChange={(e) => {
+                const newSource = [...formData.interface_parameters.section.source];
+                newSource[index] = { ...param, period_type: e.target.value as 'date' | 'datetime' };
+                setFormData({
+                  ...formData,
+                  interface_parameters: {
+                    section: {
+                      source: newSource
                     }
-                  });
-                }}
-                className="w-full p-2 border rounded"
-              >
-                <option value="date">Date</option>
-                <option value="datetime">DateTime</option>
-              </select>
-            </div>
+                  }
+                });
+              }}
+              className="w-full p-2 border rounded"
+            >
+              <option value="date">Date</option>
+              <option value="datetime">DateTime</option>
+            </select>
             {param.fields?.map((field, fieldIndex) => (
               <div key={fieldIndex} className="space-y-1">
-                <label className="block text-sm text-gray-600">{field.name}</label>
-                <p className="text-xs text-gray-500 mb-1">
-                  {field.name === 'start_date' ? 'Select the start date for the range' : 'Select the end date for the range'}
-                </p>
+                <label className="text-sm text-gray-600">{field.name}</label>
                 <input
                   type="date"
                   value={field.value}
@@ -493,7 +476,6 @@ export const YamlForm: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium mb-1">Base URL</label>
-              <p className="text-xs text-gray-500 mb-1">Enter the base URL of your API (e.g., "https://api.example.com")</p>
               <input
                 type="text"
                 value={formData.connector.base_url}
@@ -507,7 +489,6 @@ export const YamlForm: React.FC = () => {
                 className={`w-full p-2 border rounded ${
                   errors['connector.base_url'] ? 'border-red-500' : ''
                 }`}
-                placeholder="https://api.example.com"
               />
               {errors['connector.base_url'] && (
                 <p className="text-red-500 text-sm mt-1">{errors['connector.base_url']}</p>
@@ -516,7 +497,6 @@ export const YamlForm: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium mb-1">Connector Name</label>
-              <p className="text-xs text-gray-500 mb-1">Enter a unique name for your connector (e.g., "myApiConnector")</p>
               <input
                 type="text"
                 value={formData.connector.name}
@@ -530,7 +510,6 @@ export const YamlForm: React.FC = () => {
                 className={`w-full p-2 border rounded ${
                   errors['connector.name'] ? 'border-red-500' : ''
                 }`}
-                placeholder="myConnector"
               />
               {errors['connector.name'] && (
                 <p className="text-red-500 text-sm mt-1">{errors['connector.name']}</p>
@@ -541,63 +520,170 @@ export const YamlForm: React.FC = () => {
               <h3 className="font-medium">Steps</h3>
               {formData.steps.map((step, index) => (
                 <div key={index} className="p-4 border rounded space-y-2">
-                  <input
-                    type="text"
-                    placeholder="Step Name"
-                    value={step.name}
-                    onChange={(e) => {
-                      const newSteps = [...formData.steps];
-                      newSteps[index] = { ...step, name: e.target.value };
-                      setFormData({ ...formData, steps: newSteps });
-                    }}
-                    className="w-full p-2 border rounded"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Description"
-                    value={step.description}
-                    onChange={(e) => {
-                      const newSteps = [...formData.steps];
-                      newSteps[index] = { ...step, description: e.target.value };
-                      setFormData({ ...formData, steps: newSteps });
-                    }}
-                    className="w-full p-2 border rounded"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Endpoint"
-                    value={step.endpoint}
-                    onChange={(e) => {
-                      const newSteps = [...formData.steps];
-                      newSteps[index] = { ...step, endpoint: e.target.value };
-                      setFormData({ ...formData, steps: newSteps });
-                    }}
-                    className="w-full p-2 border rounded"
-                  />
-                  <select
-                    value={step.http_method}
-                    onChange={(e) => {
-                      const newSteps = [...formData.steps];
-                      newSteps[index] = { ...step, http_method: e.target.value as 'GET' | 'POST' | 'PUT' | 'DELETE' };
-                      setFormData({ ...formData, steps: newSteps });
-                    }}
-                    className="w-full p-2 border rounded"
-                  >
-                    <option value="GET">GET</option>
-                    <option value="POST">POST</option>
-                    <option value="PUT">PUT</option>
-                    <option value="DELETE">DELETE</option>
-                  </select>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newSteps = formData.steps.filter((_, i) => i !== index);
-                      setFormData({ ...formData, steps: newSteps });
-                    }}
-                    className="text-red-500 hover:text-red-600"
-                  >
-                    Remove Step
-                  </button>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-medium">Step {index + 1}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newSteps = formData.steps.filter((_, i) => i !== index);
+                        setFormData({ ...formData, steps: newSteps });
+                      }}
+                      className="text-red-500 hover:text-red-600"
+                    >
+                      Remove Step
+                    </button>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-sm text-gray-600">Step Name</label>
+                    <p className="text-xs text-gray-500 mb-1">Enter a descriptive name for this API step (e.g., "GetUserData", "UpdateProfile")</p>
+                    <input
+                      type="text"
+                      placeholder="Step Name"
+                      value={step.name}
+                      onChange={(e) => {
+                        const newSteps = [...formData.steps];
+                        newSteps[index] = { ...step, name: e.target.value };
+                        setFormData({ ...formData, steps: newSteps });
+                      }}
+                      className="w-full p-2 border rounded"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-sm text-gray-600">Description</label>
+                    <p className="text-xs text-gray-500 mb-1">Provide a brief description of what this step does (e.g., "Fetches user profile data from the API")</p>
+                    <input
+                      type="text"
+                      placeholder="Description"
+                      value={step.description}
+                      onChange={(e) => {
+                        const newSteps = [...formData.steps];
+                        newSteps[index] = { ...step, description: e.target.value };
+                        setFormData({ ...formData, steps: newSteps });
+                      }}
+                      className="w-full p-2 border rounded"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-sm text-gray-600">Endpoint</label>
+                    <p className="text-xs text-gray-500 mb-1">
+                      Enter the API endpoint path. Use {{%BASE_URL%}} for the base URL portion 
+                      (e.g., "{{%BASE_URL%}}/users" or "{{%BASE_URL%}}/api/v1/data")
+                    </p>
+                    <input
+                      type="text"
+                      placeholder="{{%BASE_URL%}}/endpoint"
+                      value={step.endpoint}
+                      onChange={(e) => {
+                        const newSteps = [...formData.steps];
+                        newSteps[index] = { ...step, endpoint: e.target.value };
+                        setFormData({ ...formData, steps: newSteps });
+                      }}
+                      className="w-full p-2 border rounded"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-sm text-gray-600">HTTP Method</label>
+                    <p className="text-xs text-gray-500 mb-1">Select the HTTP method for this API call</p>
+                    <select
+                      value={step.http_method}
+                      onChange={(e) => {
+                        const newSteps = [...formData.steps];
+                        newSteps[index] = { ...step, http_method: e.target.value as 'GET' | 'POST' | 'PUT' | 'DELETE' };
+                        setFormData({ ...formData, steps: newSteps });
+                      }}
+                      className="w-full p-2 border rounded"
+                    >
+                      <option value="GET">GET - Retrieve data</option>
+                      <option value="POST">POST - Create new data</option>
+                      <option value="PUT">PUT - Update existing data</option>
+                      <option value="DELETE">DELETE - Remove data</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-sm text-gray-600">Variables Output</label>
+                    <p className="text-xs text-gray-500 mb-1">Configure how the API response should be stored</p>
+                    {step.variables_output.map((variable, varIndex) => (
+                      <div key={varIndex} className="space-y-2 p-2 bg-gray-50 rounded">
+                        <div className="space-y-1">
+                          <label className="block text-sm text-gray-600">Variable Name</label>
+                          <p className="text-xs text-gray-500 mb-1">Name for storing the response (e.g., "user_data", "api_response")</p>
+                          <input
+                            type="text"
+                            placeholder="Variable Name"
+                            value={variable.variable_name}
+                            onChange={(e) => {
+                              const newSteps = [...formData.steps];
+                              const newVars = [...step.variables_output];
+                              newVars[varIndex] = { ...variable, variable_name: e.target.value };
+                              newSteps[index] = { ...step, variables_output: newVars };
+                              setFormData({ ...formData, steps: newSteps });
+                            }}
+                            className="w-full p-2 border rounded"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="block text-sm text-gray-600">Response Location</label>
+                          <p className="text-xs text-gray-500 mb-1">Specify where in the response to find the data (e.g., "data", "results", "items")</p>
+                          <input
+                            type="text"
+                            placeholder="Response Location"
+                            value={variable.response_location}
+                            onChange={(e) => {
+                              const newSteps = [...formData.steps];
+                              const newVars = [...step.variables_output];
+                              newVars[varIndex] = { ...variable, response_location: e.target.value };
+                              newSteps[index] = { ...step, variables_output: newVars };
+                              setFormData({ ...formData, steps: newSteps });
+                            }}
+                            className="w-full p-2 border rounded"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="block text-sm text-gray-600">Variable Format</label>
+                          <p className="text-xs text-gray-500 mb-1">Format of the response data (usually "json")</p>
+                          <input
+                            type="text"
+                            placeholder="Variable Format"
+                            value={variable.variable_format}
+                            onChange={(e) => {
+                              const newSteps = [...formData.steps];
+                              const newVars = [...step.variables_output];
+                              newVars[varIndex] = { ...variable, variable_format: e.target.value };
+                              newSteps[index] = { ...step, variables_output: newVars };
+                              setFormData({ ...formData, steps: newSteps });
+                            }}
+                            className="w-full p-2 border rounded"
+                          />
+                        </div>
+
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            checked={variable.overwrite_storage}
+                            onChange={(e) => {
+                              const newSteps = [...formData.steps];
+                              const newVars = [...step.variables_output];
+                              newVars[varIndex] = { ...variable, overwrite_storage: e.target.checked };
+                              newSteps[index] = { ...step, variables_output: newVars };
+                              setFormData({ ...formData, steps: newSteps });
+                            }}
+                            className="rounded border-gray-300"
+                          />
+                          <div>
+                            <label className="block text-sm text-gray-600">Overwrite Storage</label>
+                            <p className="text-xs text-gray-500">Check to overwrite existing data in storage</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ))}
               <button
