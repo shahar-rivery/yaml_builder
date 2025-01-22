@@ -277,33 +277,16 @@ export const YamlForm: React.FC = () => {
           </button>
         </div>
 
-        <input
-          type="text"
-          placeholder="Parameter Name"
-          value={param.name}
-          onChange={(e) => {
-            const newSource = [...formData.interface_parameters.section.source];
-            newSource[index] = { ...param, name: e.target.value };
-            setFormData({
-              ...formData,
-              interface_parameters: {
-                section: {
-                  source: newSource
-                }
-              }
-            });
-          }}
-          className="w-full p-2 border rounded"
-        />
-
-        {param.type === 'string' && (
+        <div className="space-y-1">
+          <label className="block text-sm text-gray-600">Parameter Name</label>
+          <p className="text-xs text-gray-500 mb-1">Enter a unique identifier for this parameter (e.g., "api_key", "date_range")</p>
           <input
             type="text"
-            placeholder="Value"
-            value={param.value || ''}
+            placeholder="Parameter Name"
+            value={param.name}
             onChange={(e) => {
               const newSource = [...formData.interface_parameters.section.source];
-              newSource[index] = { ...param, value: e.target.value };
+              newSource[index] = { ...param, name: e.target.value };
               setFormData({
                 ...formData,
                 interface_parameters: {
@@ -315,15 +298,19 @@ export const YamlForm: React.FC = () => {
             }}
             className="w-full p-2 border rounded"
           />
-        )}
+        </div>
 
-        {param.type === 'authentication' && (
-          <div className="space-y-2">
-            <select
-              value={param.auth_type}
+        {param.type === 'string' && (
+          <div className="space-y-1">
+            <label className="block text-sm text-gray-600">Value</label>
+            <p className="text-xs text-gray-500 mb-1">Enter the default value for this string parameter</p>
+            <input
+              type="text"
+              placeholder="Value"
+              value={param.value || ''}
               onChange={(e) => {
                 const newSource = [...formData.interface_parameters.section.source];
-                newSource[index] = { ...param, auth_type: e.target.value as AuthType };
+                newSource[index] = { ...param, value: e.target.value };
                 setFormData({
                   ...formData,
                   interface_parameters: {
@@ -334,13 +321,44 @@ export const YamlForm: React.FC = () => {
                 });
               }}
               className="w-full p-2 border rounded"
-            >
-              <option value="basic_http">Basic HTTP</option>
-              <option value="bearer">Bearer Token</option>
-              <option value="api_token">API Token</option>
-            </select>
+            />
+          </div>
+        )}
+
+        {param.type === 'authentication' && (
+          <div className="space-y-2">
+            <div className="space-y-1">
+              <label className="block text-sm text-gray-600">Authentication Type</label>
+              <p className="text-xs text-gray-500 mb-1">Select the type of authentication required for your API</p>
+              <select
+                value={param.auth_type}
+                onChange={(e) => {
+                  const newSource = [...formData.interface_parameters.section.source];
+                  newSource[index] = { ...param, auth_type: e.target.value as AuthType };
+                  setFormData({
+                    ...formData,
+                    interface_parameters: {
+                      section: {
+                        source: newSource
+                      }
+                    }
+                  });
+                }}
+                className="w-full p-2 border rounded"
+              >
+                <option value="basic_http">Basic HTTP</option>
+                <option value="bearer">Bearer Token</option>
+                <option value="api_token">API Token</option>
+              </select>
+            </div>
             {param.fields?.map((field, fieldIndex) => (
               <div key={fieldIndex} className="space-y-1">
+                <label className="block text-sm text-gray-600">{field.name}</label>
+                <p className="text-xs text-gray-500 mb-1">
+                  {field.name === 'username' ? 'Enter the username for authentication' : 
+                   field.name === 'password' ? 'Enter the password or token' : 
+                   'Enter the authentication value'}
+                </p>
                 <input
                   type="text"
                   placeholder={`${field.name} Value`}
@@ -368,28 +386,35 @@ export const YamlForm: React.FC = () => {
 
         {param.type === 'date_range' && (
           <div className="space-y-2">
-            <select
-              value={param.period_type}
-              onChange={(e) => {
-                const newSource = [...formData.interface_parameters.section.source];
-                newSource[index] = { ...param, period_type: e.target.value as 'date' | 'datetime' };
-                setFormData({
-                  ...formData,
-                  interface_parameters: {
-                    section: {
-                      source: newSource
+            <div className="space-y-1">
+              <label className="block text-sm text-gray-600">Period Type</label>
+              <p className="text-xs text-gray-500 mb-1">Choose whether to use date only or include time</p>
+              <select
+                value={param.period_type}
+                onChange={(e) => {
+                  const newSource = [...formData.interface_parameters.section.source];
+                  newSource[index] = { ...param, period_type: e.target.value as 'date' | 'datetime' };
+                  setFormData({
+                    ...formData,
+                    interface_parameters: {
+                      section: {
+                        source: newSource
+                      }
                     }
-                  }
-                });
-              }}
-              className="w-full p-2 border rounded"
-            >
-              <option value="date">Date</option>
-              <option value="datetime">DateTime</option>
-            </select>
+                  });
+                }}
+                className="w-full p-2 border rounded"
+              >
+                <option value="date">Date</option>
+                <option value="datetime">DateTime</option>
+              </select>
+            </div>
             {param.fields?.map((field, fieldIndex) => (
               <div key={fieldIndex} className="space-y-1">
-                <label className="text-sm text-gray-600">{field.name}</label>
+                <label className="block text-sm text-gray-600">{field.name}</label>
+                <p className="text-xs text-gray-500 mb-1">
+                  {field.name === 'start_date' ? 'Select the start date for the range' : 'Select the end date for the range'}
+                </p>
                 <input
                   type="date"
                   value={field.value}
@@ -468,6 +493,7 @@ export const YamlForm: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium mb-1">Base URL</label>
+              <p className="text-xs text-gray-500 mb-1">Enter the base URL of your API (e.g., "https://api.example.com")</p>
               <input
                 type="text"
                 value={formData.connector.base_url}
@@ -481,6 +507,7 @@ export const YamlForm: React.FC = () => {
                 className={`w-full p-2 border rounded ${
                   errors['connector.base_url'] ? 'border-red-500' : ''
                 }`}
+                placeholder="https://api.example.com"
               />
               {errors['connector.base_url'] && (
                 <p className="text-red-500 text-sm mt-1">{errors['connector.base_url']}</p>
@@ -489,6 +516,7 @@ export const YamlForm: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium mb-1">Connector Name</label>
+              <p className="text-xs text-gray-500 mb-1">Enter a unique name for your connector (e.g., "myApiConnector")</p>
               <input
                 type="text"
                 value={formData.connector.name}
@@ -502,6 +530,7 @@ export const YamlForm: React.FC = () => {
                 className={`w-full p-2 border rounded ${
                   errors['connector.name'] ? 'border-red-500' : ''
                 }`}
+                placeholder="myConnector"
               />
               {errors['connector.name'] && (
                 <p className="text-red-500 text-sm mt-1">{errors['connector.name']}</p>

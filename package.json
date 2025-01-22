@@ -1,4 +1,7 @@
 {
+  "name": "yaml-generator",
+  "private": true,
+  "version": "0.0.0",
   "dependencies": {
     "@types/js-yaml": "^4.0.9",
     "dotenv": "^16.4.7",
