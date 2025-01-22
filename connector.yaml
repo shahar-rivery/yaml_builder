@@ -1,0 +1,30 @@
+connector:
+  base_url: "https://api.openai.com/v1"
+  default_headers:
+    Accept: application/json
+    Authorization: Basic "{authorization}"
+  default_retry_strategy: {}
+  name: "openai_connector"
+  variables_metadata:
+    final_output_file:
+      format: json
+      storage_name: results dir
+    variable_placeholder:
+      format: json
+      storage_name: results dir 
+  variables_storages:
+  - name: results dir
+    path: /storage/file_system
+    type: file_system
+
+steps:
+  - name: "fetch_website_content"
+    description: "Fetch and process website content using OpenAI"
+    endpoint: "{{%BASE_URL%}}/v1/chat/completions"
+    http_method: GET
+    type: rest
+    variables_output:
+      - variable_name: final_output_file
+        response_location: data
+        variable_format: json
+        overwrite_storage: true 
