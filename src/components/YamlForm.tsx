@@ -407,6 +407,23 @@ export const YamlForm: React.FC = () => {
     );
   };
 
+  const handleAddStep = () => {
+    const newStep = {
+      id: Date.now(),
+      name: '',
+      description: '',
+      endpoint: '{{%BASE_URL%}}/',
+      http_method: 'GET',
+      type: 'rest',
+      variables_output: []
+    };
+
+    setFormData((prevData) => ({
+      ...prevData,
+      steps: [...prevData.steps, newStep],
+    }));
+  };
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-6">
@@ -649,7 +666,8 @@ export const YamlForm: React.FC = () => {
                     type="button"
                     onClick={() => {
                       const newStep = {
-                        name: '', // Initialize step name
+                        id: Date.now(),
+                        name: '',
                         description: '',
                         endpoint: '{{%BASE_URL%}}/',
                         http_method: 'GET',
