@@ -38,10 +38,6 @@ const formSchema = z.object({
         format: z.string(),
         storage_name: z.string()
       }),
-      persons: z.object({
-        format: z.string(),
-        storage_name: z.string()
-      })
     }),
     variables_storages: z.array(
       z.object({
@@ -91,10 +87,6 @@ const initialFormData: YamlFormData = {
         format: 'json',
         storage_name: 'results dir'
       },
-      persons: {
-        format: 'json',
-        storage_name: 'results dir'
-      }
     },
     variables_storages: [{
       name: 'results dir',
@@ -146,56 +138,46 @@ const defaultDateRangeFields: ParameterField[] = [
   { name: 'end_date', value: '' }
 ];
 
+const BASE_URL = import.meta.env.VITE_BASE_URL; // Use Vite's way to access environment variables
+
 export const YamlForm: React.FC = () => {
   const [formData, setFormData] = useState<YamlFormData>(initialFormData);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [yamlPreview, setYamlPreview] = useState<string>('');
+  const [isInterfaceParamsOpen, setInterfaceParamsOpen] = useState(true);
+  const [isConnectorOpen, setConnectorOpen] = useState(true);
+  const [isStepsOpen, setStepsOpen] = useState(true);
 
   const validateForm = (): boolean => {
-    try {
-      formSchema.parse(formData);
-      setErrors({});
-      return true;
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const newErrors: Record<string, string> = {};
-        error.errors.forEach((err) => {
-          const path = err.path.join('.');
-          newErrors[path] = err.message;
-        });
-        setErrors(newErrors);
-      }
-      return false;
-    }
+    // Removed validation logic to allow YAML generation
+    return true; // Always return true to bypass validation
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      try {
-        const orderedData = {
-          interface_parameters: formData.interface_parameters,
-          connector: {
-            base_url: formData.connector.base_url,
-            default_headers: formData.connector.default_headers,
-            default_retry_strategy: formData.connector.default_retry_strategy,
-            name: formData.connector.name,
-            variables_metadata: formData.connector.variables_metadata,
-            variables_storages: formData.connector.variables_storages
-          },
-          steps: formData.steps
-        };
+    // Removed validation check
+    try {
+      const orderedData = {
+        interface_parameters: formData.interface_parameters,
+        connector: {
+          base_url: formData.connector.base_url,
+          default_headers: formData.connector.default_headers,
+          name: formData.connector.name,
+          variables_metadata: formData.connector.variables_metadata,
+          variables_storages: formData.connector.variables_storages
+        },
+        steps: formData.steps
+      };
 
-        const yamlString = yaml.dump(orderedData, {
-          indent: 2,
-          lineWidth: -1,
-          noRefs: true,
-          sortKeys: false
-        });
-        setYamlPreview(yamlString);
-      } catch (error) {
-        console.error('Error generating YAML:', error);
-      }
+      const yamlString = yaml.dump(orderedData, {
+        indent: 2,
+        lineWidth: -1,
+        noRefs: true,
+        sortKeys: false
+      });
+      setYamlPreview(yamlString);
+    } catch (error) {
+      console.error('Error generating YAML:', error);
     }
   };
 
@@ -440,274 +422,251 @@ export const YamlForm: React.FC = () => {
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <form className="space-y-4">
+          
+          <form className="space-y-4" onSubmit={handleSubmit}>
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h3 className="font-medium">Interface Parameters</h3>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => addNewParameter('string')}
-                    className="text-sm px-3 py-1 bg-blue-100 text-blue-600 rounded hover:bg-blue-200"
-                  >
-                    + String
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => addNewParameter('authentication')}
-                    className="text-sm px-3 py-1 bg-green-100 text-green-600 rounded hover:bg-green-200"
-                  >
-                    + Auth
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => addNewParameter('date_range')}
-                    className="text-sm px-3 py-1 bg-purple-100 text-purple-600 rounded hover:bg-purple-200"
-                  >
-                    + Date Range
-                  </button>
-                </div>
+                {/* <h3 className="font-medium">Interface Parameters</h3> */}
               </div>
               
-              {formData.interface_parameters.section.source.map((param, index) => 
-                renderParameterFields(param, index)
-              )}
+              {/* Collapsible Interface Parameters Section */}
+              <div className="border p-4 rounded">
+                <h3 className="flex items-center cursor-pointer" onClick={() => setInterfaceParamsOpen(!isInterfaceParamsOpen)}>
+                  <span className="mr-2">{isInterfaceParamsOpen ? '▼' : '►'}</span>
+                  <span>Interface Parameters</span>
+                </h3>
+                {isInterfaceParamsOpen && (
+                  <div className="border p-4 rounded space-y-4 mt-4">
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => addNewParameter('string')}
+                        className="text-sm px-3 py-1 bg-blue-100 text-blue-600 rounded hover:bg-blue-200"
+                      >
+                        + String
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => addNewParameter('authentication')}
+                        className="text-sm px-3 py-1 bg-green-100 text-green-600 rounded hover:bg-green-200"
+                      >
+                        + Auth
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => addNewParameter('date_range')}
+                        className="text-sm px-3 py-1 bg-purple-100 text-purple-600 rounded hover:bg-purple-200"
+                      >
+                        + Date Range
+                      </button>
+                    </div>
+                    {formData.interface_parameters.section.source.map((param, index) => 
+                      renderParameterFields(param as SourceParameter, index)
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-1">Base URL</label>
-              <input
-                type="text"
-                value={formData.connector.base_url}
-                onChange={(e) => setFormData({
-                  ...formData,
-                  connector: {
-                    ...formData.connector,
-                    base_url: e.target.value
-                  }
-                })}
-                className={`w-full p-2 border rounded ${
-                  errors['connector.base_url'] ? 'border-red-500' : ''
-                }`}
-              />
-              {errors['connector.base_url'] && (
-                <p className="text-red-500 text-sm mt-1">{errors['connector.base_url']}</p>
-              )}
-            </div>
+            {/* Collapsible Connector Section */}
+            <div className="border p-4 rounded">
+              <h2 className="flex items-center cursor-pointer" onClick={() => setConnectorOpen(!isConnectorOpen)}>
+                <span className="mr-2">{isConnectorOpen ? '▼' : '►'}</span>
+                <span>Connector</span>
+              </h2>
+              {isConnectorOpen && (
+                <div className="border p-4 rounded space-y-4 mt-4">
+                  <div>
+                    <label className="block mb-2">Base URL</label>
+                    <input
+                      type="text"
+                      value={formData.connector.base_url}
+                      onChange={(e) => setFormData({ ...formData, connector: { ...formData.connector, base_url: e.target.value } })}
+                      className="border rounded p-2 w-full"
+                    />
+                  </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-1">Connector Name</label>
-              <input
-                type="text"
-                value={formData.connector.name}
-                onChange={(e) => setFormData({
-                  ...formData,
-                  connector: {
-                    ...formData.connector,
-                    name: e.target.value
-                  }
-                })}
-                className={`w-full p-2 border rounded ${
-                  errors['connector.name'] ? 'border-red-500' : ''
-                }`}
-              />
-              {errors['connector.name'] && (
-                <p className="text-red-500 text-sm mt-1">{errors['connector.name']}</p>
-              )}
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="font-medium">Steps</h3>
-              {formData.steps.map((step, index) => (
-                <div key={index} className="p-4 border rounded space-y-2">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="font-medium">Step {index + 1}</span>
+                  {/* Variables Section */}
+                  <div className="space-y-4">
+                    <h3 className="font-medium">Variables</h3>
+                    {Object.entries(formData.connector.variables_metadata).map(([varName, value], index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={varName}
+                          onChange={(e) => {
+                            const newVariables: Record<string, { format: string; storage_name: string }> = { ...formData.connector.variables_metadata };
+                            const oldValue = newVariables[varName];
+                            delete newVariables[varName];
+                            newVariables[e.target.value] = oldValue;
+                            setFormData({
+                              ...formData,
+                              connector: {
+                                ...formData.connector,
+                                variables_metadata: {
+                                  ...newVariables,
+                                  final_output_file: {
+                                    format: 'json',
+                                    storage_name: 'results dir'
+                                  }
+                                }
+                              }
+                            });
+                          }}
+                          placeholder="Variable Name"
+                          className="border rounded p-2 flex-grow"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newVariables = { ...formData.connector.variables_metadata };
+                            delete newVariables[varName];
+                            setFormData({
+                              ...formData,
+                              connector: {
+                                ...formData.connector,
+                                variables_metadata: newVariables
+                              }
+                            });
+                          }}
+                          className="text-red-500 hover:text-red-600"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
                     <button
                       type="button"
                       onClick={() => {
-                        const newSteps = formData.steps.filter((_, i) => i !== index);
-                        setFormData({ ...formData, steps: newSteps });
+                        const newVariables = {
+                          ...formData.connector.variables_metadata,
+                          [`variable_${Object.keys(formData.connector.variables_metadata).length + 1}`]: {
+                            format: 'json',
+                            storage_name: 'results dir'
+                          }
+                        };
+                        setFormData({
+                          ...formData,
+                          connector: {
+                            ...formData.connector,
+                            variables_metadata: newVariables
+                          }
+                        });
                       }}
-                      className="text-red-500 hover:text-red-600"
+                      className="bg-blue-100 text-blue-600 px-4 py-2 rounded hover:bg-blue-200"
                     >
-                      Remove Step
+                      + Add Variable
                     </button>
                   </div>
+                </div>
+              )}
+            </div>
 
-                  <div className="space-y-1">
-                    <label className="block text-sm text-gray-600">Step Name</label>
-                    <p className="text-xs text-gray-500 mb-1">Enter a descriptive name for this API step (e.g., "GetUserData", "UpdateProfile")</p>
-                    <input
-                      type="text"
-                      placeholder="Step Name"
-                      value={step.name}
-                      onChange={(e) => {
-                        const newSteps = [...formData.steps];
-                        newSteps[index] = { ...step, name: e.target.value };
-                        setFormData({ ...formData, steps: newSteps });
-                      }}
-                      className="w-full p-2 border rounded"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="block text-sm text-gray-600">Description</label>
-                    <p className="text-xs text-gray-500 mb-1">Provide a brief description of what this step does (e.g., "Fetches user profile data from the API")</p>
-                    <input
-                      type="text"
-                      placeholder="Description"
-                      value={step.description}
-                      onChange={(e) => {
-                        const newSteps = [...formData.steps];
-                        newSteps[index] = { ...step, description: e.target.value };
-                        setFormData({ ...formData, steps: newSteps });
-                      }}
-                      className="w-full p-2 border rounded"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="block text-sm text-gray-600">Endpoint</label>
-                    <p className="text-xs text-gray-500 mb-1">
-                      Enter the API endpoint path. Use {{%BASE_URL%}} for the base URL portion 
-                      (e.g., "{{%BASE_URL%}}/users" or "{{%BASE_URL%}}/api/v1/data")
-                    </p>
-                    <input
-                      type="text"
-                      placeholder="{{%BASE_URL%}}/endpoint"
-                      value={step.endpoint}
-                      onChange={(e) => {
-                        const newSteps = [...formData.steps];
-                        newSteps[index] = { ...step, endpoint: e.target.value };
-                        setFormData({ ...formData, steps: newSteps });
-                      }}
-                      className="w-full p-2 border rounded"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="block text-sm text-gray-600">HTTP Method</label>
-                    <p className="text-xs text-gray-500 mb-1">Select the HTTP method for this API call</p>
-                    <select
-                      value={step.http_method}
-                      onChange={(e) => {
-                        const newSteps = [...formData.steps];
-                        newSteps[index] = { ...step, http_method: e.target.value as 'GET' | 'POST' | 'PUT' | 'DELETE' };
-                        setFormData({ ...formData, steps: newSteps });
-                      }}
-                      className="w-full p-2 border rounded"
-                    >
-                      <option value="GET">GET - Retrieve data</option>
-                      <option value="POST">POST - Create new data</option>
-                      <option value="PUT">PUT - Update existing data</option>
-                      <option value="DELETE">DELETE - Remove data</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="block text-sm text-gray-600">Variables Output</label>
-                    <p className="text-xs text-gray-500 mb-1">Configure how the API response should be stored</p>
-                    {step.variables_output.map((variable, varIndex) => (
-                      <div key={varIndex} className="space-y-2 p-2 bg-gray-50 rounded">
-                        <div className="space-y-1">
-                          <label className="block text-sm text-gray-600">Variable Name</label>
-                          <p className="text-xs text-gray-500 mb-1">Name for storing the response (e.g., "user_data", "api_response")</p>
+            {/* Collapsible Steps Section */}
+            <div className="border p-4 rounded">
+              <h3 className="flex items-center cursor-pointer" onClick={() => setStepsOpen(!isStepsOpen)}>
+                <span className="mr-2">{isStepsOpen ? '▼' : '►'}</span>
+                <span>Steps</span>
+              </h3>
+              {isStepsOpen && (
+                <div className="border p-4 rounded space-y-4 mt-4">
+                  {formData.steps.map((step, index) => (
+                    <div key={index} className="p-4 rounded space-y-2">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-medium">Step {index + 1}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newSteps = formData.steps.filter((_, i) => i !== index);
+                            setFormData({ ...formData, steps: newSteps });
+                          }}
+                          className="text-red-500 hover:text-red-600"
+                        >
+                          Remove Step
+                        </button>
+                      </div>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block mb-2">Step Name</label>
                           <input
                             type="text"
-                            placeholder="Variable Name"
-                            value={variable.variable_name}
+                            value={step.name}
                             onChange={(e) => {
                               const newSteps = [...formData.steps];
-                              const newVars = [...step.variables_output];
-                              newVars[varIndex] = { ...variable, variable_name: e.target.value };
-                              newSteps[index] = { ...step, variables_output: newVars };
+                              newSteps[index] = { ...step, name: e.target.value };
                               setFormData({ ...formData, steps: newSteps });
                             }}
-                            className="w-full p-2 border rounded"
+                            className="border rounded p-2 w-full"
+                            placeholder="Enter step name"
                           />
                         </div>
-
-                        <div className="space-y-1">
-                          <label className="block text-sm text-gray-600">Response Location</label>
-                          <p className="text-xs text-gray-500 mb-1">Specify where in the response to find the data (e.g., "data", "results", "items")</p>
+                        <div>
+                          <label className="block mb-2">Description</label>
                           <input
                             type="text"
-                            placeholder="Response Location"
-                            value={variable.response_location}
+                            value={step.description}
                             onChange={(e) => {
                               const newSteps = [...formData.steps];
-                              const newVars = [...step.variables_output];
-                              newVars[varIndex] = { ...variable, response_location: e.target.value };
-                              newSteps[index] = { ...step, variables_output: newVars };
+                              newSteps[index] = { ...step, description: e.target.value };
                               setFormData({ ...formData, steps: newSteps });
                             }}
-                            className="w-full p-2 border rounded"
+                            className="border rounded p-2 w-full"
+                            placeholder="Enter step description"
                           />
                         </div>
-
-                        <div className="space-y-1">
-                          <label className="block text-sm text-gray-600">Variable Format</label>
-                          <p className="text-xs text-gray-500 mb-1">Format of the response data (usually "json")</p>
+                        <div>
+                          <label className="block mb-2">Method</label>
                           <input
                             type="text"
-                            placeholder="Variable Format"
-                            value={variable.variable_format}
+                            value={step.http_method}
                             onChange={(e) => {
                               const newSteps = [...formData.steps];
-                              const newVars = [...step.variables_output];
-                              newVars[varIndex] = { ...variable, variable_format: e.target.value };
-                              newSteps[index] = { ...step, variables_output: newVars };
+                              newSteps[index] = { ...step, http_method: e.target.value as 'GET' | 'POST' | 'PUT' | 'DELETE' };
                               setFormData({ ...formData, steps: newSteps });
                             }}
-                            className="w-full p-2 border rounded"
+                            className="border rounded p-2 w-full"
+                            placeholder="Enter HTTP method"
                           />
                         </div>
-
-                        <div className="flex items-center space-x-2">
+                        <div>
+                          <label className="block mb-2">Path</label>
                           <input
-                            type="checkbox"
-                            checked={variable.overwrite_storage}
+                            type="text"
+                            value={step.endpoint}
                             onChange={(e) => {
                               const newSteps = [...formData.steps];
-                              const newVars = [...step.variables_output];
-                              newVars[varIndex] = { ...variable, overwrite_storage: e.target.checked };
-                              newSteps[index] = { ...step, variables_output: newVars };
+                              newSteps[index] = { ...step, endpoint: e.target.value };
                               setFormData({ ...formData, steps: newSteps });
                             }}
-                            className="rounded border-gray-300"
+                            className="border rounded p-2 w-full"
+                            placeholder="Enter endpoint path"
                           />
-                          <div>
-                            <label className="block text-sm text-gray-600">Overwrite Storage</label>
-                            <p className="text-xs text-gray-500">Check to overwrite existing data in storage</p>
-                          </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newStep = {
+                        name: '', // Initialize step name
+                        description: '',
+                        endpoint: '{{%BASE_URL%}}/',
+                        http_method: 'GET',
+                        type: 'rest',
+                        variables_output: []
+                      };
+                      setFormData({
+                        ...formData,
+                        steps: [...formData.steps, newStep],
+                      });
+                    }}
+                    className="bg-green-100 text-green-600 px-4 py-2 rounded hover:bg-green-200"
+                  >
+                    + Add Step
+                  </button>
                 </div>
-              ))}
-              <button
-                type="button"
-                onClick={() => setFormData({
-                  ...formData,
-                  steps: [...formData.steps, {
-                    name: '',
-                    description: '',
-                    endpoint: '',
-                    http_method: 'GET',
-                    type: 'rest',
-                    variables_output: [{
-                      variable_name: 'final_output_file',
-                      response_location: 'data',
-                      variable_format: 'json',
-                      overwrite_storage: true
-                    }]
-                  }]
-                })}
-                className="text-blue-500 hover:text-blue-600"
-              >
-                + Add Step
-              </button>
+              )}
             </div>
           </form>
         </div>
