@@ -569,8 +569,8 @@ export const YamlForm: React.FC = () => {
                   <div className="space-y-1">
                     <label className="block text-sm text-gray-600">Endpoint</label>
                     <p className="text-xs text-gray-500 mb-1">
-                      Enter the API endpoint path. Use {{%BASE_URL%}} for the base URL portion 
-                      (e.g., "{{%BASE_URL%}}/users" or "{{%BASE_URL%}}/api/v1/data")
+                      Enter the API endpoint path. Use {'{{'} BASE_URL {'}}'}  for the base URL portion 
+                      (e.g., "{'{{'} BASE_URL {'}}'}/users" or "{'{{'} BASE_URL {'}}'}/api/v1/data")
                     </p>
                     <input
                       type="text"
