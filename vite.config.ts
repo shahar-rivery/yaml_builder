@@ -7,7 +7,7 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
-  base: '/yaml_builder/',
+  base: '/',
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
