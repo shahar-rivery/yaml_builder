@@ -32,7 +32,7 @@ const formSchema = z.object({
       Authorization: z.string()
     }),
     default_retry_strategy: z.object({}),
-    name: z.string().min(1, 'Name is required'),
+    // name: z.string().min(1, 'Name is required'),
     variables_metadata: z.object({
       final_output_file: z.object({
         format: z.string(),
@@ -81,7 +81,7 @@ const initialFormData: YamlFormData = {
       Authorization: 'Basic "{authorization}"'
     },
     default_retry_strategy: {},
-    name: '',
+    // name: '',
     variables_metadata: {
       final_output_file: {
         format: 'json',
@@ -139,6 +139,20 @@ const defaultDateRangeFields: ParameterField[] = [
 ];
 
 const BASE_URL = import.meta.env.VITE_BASE_URL; // Use Vite's way to access environment variables
+
+interface Step {
+  name: string;
+  description: string;
+  command: string;
+  method: string;
+}
+
+const initialStep: Step = {
+  name: '',
+  description: '',
+  command: '',
+  method: '',
+};
 
 export const YamlForm: React.FC = () => {
   const [formData, setFormData] = useState<YamlFormData>(initialFormData);
@@ -440,7 +454,7 @@ export const YamlForm: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           
-          <form className="space-y-4" onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 {/* <h3 className="font-medium">Interface Parameters</h3> */}
@@ -452,6 +466,9 @@ export const YamlForm: React.FC = () => {
                   <span className="mr-2">{isInterfaceParamsOpen ? '▼' : '►'}</span>
                   <span>Interface Parameters</span>
                 </h3>
+                <p className="text-sm text-gray-500 mb-2">
+                  The interface parameters element defines the parameters for the interface.
+              </p>
                 {isInterfaceParamsOpen && (
                   <div className="border p-4 rounded space-y-4 mt-4">
                     <div className="flex gap-2">
@@ -490,11 +507,18 @@ export const YamlForm: React.FC = () => {
               <h2 className="flex items-center cursor-pointer" onClick={() => setConnectorOpen(!isConnectorOpen)}>
                 <span className="mr-2">{isConnectorOpen ? '▼' : '►'}</span>
                 <span>Connector</span>
+                
               </h2>
+              <p className="text-sm text-gray-500 mb-2">
+                The connector element defines the connection settings for integrating with an external system or API.
+              </p>
               {isConnectorOpen && (
                 <div className="border p-4 rounded space-y-4 mt-4">
                   <div>
                     <label className="block mb-2">Base URL</label>
+                    <p className="text-sm text-gray-500 mb-2">
+                      Enter the base URL for the connector.
+                    </p>
                     <input
                       type="text"
                       value={formData.connector.base_url}
@@ -506,6 +530,9 @@ export const YamlForm: React.FC = () => {
                   {/* Variables Section */}
                   <div className="space-y-4">
                     <h3 className="font-medium">Variables</h3>
+                    <p className="text-sm text-gray-500 mb-2">
+                      The variables element defines the variables for the connector.
+                    </p>
                     {Object.entries(formData.connector.variables_metadata).map(([varName, value], index) => (
                       <div key={index} className="flex items-center gap-2">
                         <input
@@ -585,6 +612,9 @@ export const YamlForm: React.FC = () => {
                 <span className="mr-2">{isStepsOpen ? '▼' : '►'}</span>
                 <span>Steps</span>
               </h3>
+              <p className="text-sm text-gray-500 mb-2">
+                The steps element defines the steps to be executed in the workflow.
+              </p>
               {isStepsOpen && (
                 <div className="border p-4 rounded space-y-4 mt-4">
                   {formData.steps.map((step, index) => (
@@ -605,6 +635,9 @@ export const YamlForm: React.FC = () => {
                       <div className="space-y-4">
                         <div>
                           <label className="block mb-2">Step Name</label>
+                          <p className="text-sm text-gray-500 mb-2">
+                            A clear, descriptive name for this step. Use names that indicate the step's purpose.
+                          </p>
                           <input
                             type="text"
                             value={step.name}
@@ -613,40 +646,50 @@ export const YamlForm: React.FC = () => {
                               newSteps[index] = { ...step, name: e.target.value };
                               setFormData({ ...formData, steps: newSteps });
                             }}
-                            className="border rounded p-2 w-full"
+                            className="w-full p-2 border rounded"
                             placeholder="Enter step name"
                           />
                         </div>
                         <div>
                           <label className="block mb-2">Description</label>
-                          <input
-                            type="text"
+                          <p className="text-sm text-gray-500 mb-2">
+                            Detailed explanation of what this step does. Include any important details about its execution.
+                          </p>
+                          <textarea
                             value={step.description}
                             onChange={(e) => {
                               const newSteps = [...formData.steps];
                               newSteps[index] = { ...step, description: e.target.value };
                               setFormData({ ...formData, steps: newSteps });
                             }}
-                            className="border rounded p-2 w-full"
+                            className="w-full p-2 border rounded"
                             placeholder="Enter step description"
+                            rows={2}
                           />
                         </div>
                         <div>
                           <label className="block mb-2">Method</label>
-                          <input
-                            type="text"
+                          <p className="text-sm text-gray-500 mb-2">
+                            Select the HTTP method for this step. Choose GET for retrieving data or POST for sending data.
+                          </p>
+                          <select
                             value={step.http_method}
                             onChange={(e) => {
                               const newSteps = [...formData.steps];
                               newSteps[index] = { ...step, http_method: e.target.value as 'GET' | 'POST' | 'PUT' | 'DELETE' };
                               setFormData({ ...formData, steps: newSteps });
                             }}
-                            className="border rounded p-2 w-full"
-                            placeholder="Enter HTTP method"
-                          />
+                            className="w-full p-2 border rounded bg-white"
+                          >
+                            <option value="">Select a method</option>
+                            <option value="GET">GET</option>
+                            <option value="POST">POST</option>
+                          </select>
                         </div>
                         <div>
                           <label className="block mb-2">Path</label>
+                          <p className="text-sm text-gray-500 mb-2">
+                          Enter the path to the report.</p>
                           <input
                             type="text"
                             value={step.endpoint}
