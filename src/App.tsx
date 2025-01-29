@@ -3,7 +3,7 @@ import { Bot, Link, Loader2, Upload } from 'lucide-react';
 import { scrapeUrl } from './services/apify';
 import { generateYaml } from './services/openai';
 import type { ScrapingResult, ApiKeys } from './types';
-import { YamlForm } from './components/YamlForm'
+import { YamlForm } from './components/YamlForm';
 
 function App() {
   const [url, setUrl] = useState('');
