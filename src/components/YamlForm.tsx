@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { z } from 'zod';
 import yaml from 'js-yaml';
 import { Copy, Download } from 'lucide-react';
+import { YamlConfig, Step, InterfaceParameter, VariableMetadata } from '../types/yaml';
+import StepForm from './StepForm';
+import { InterfaceParametersForm } from './InterfaceParametersForm';
+import { VariablesMetadataForm } from './VariablesMetadataForm';
 
 const formSchema = z.object({
   interface_parameters: z.object({
@@ -61,7 +65,8 @@ const formSchema = z.object({
           variable_format: z.string(),
           overwrite_storage: z.boolean()
         })
-      )
+      ),
+      pagination: z.string().optional()
     })
   )
 });
@@ -76,10 +81,7 @@ const initialFormData: YamlFormData = {
   },
   connector: {
     base_url: '',
-    default_headers: {
-      Accept: 'application/json',
-      Authorization: 'Basic "{authorization}"'
-    },
+    default_headers: {},
     default_retry_strategy: {},
     // name: '',
     variables_metadata: {
@@ -105,7 +107,8 @@ const initialFormData: YamlFormData = {
       response_location: 'data',
       variable_format: 'json',
       overwrite_storage: true
-    }]
+    }],
+    pagination: undefined
   }]
 };
 
@@ -145,6 +148,10 @@ interface Step {
   description: string;
   command: string;
   method: string;
+  endpoint: string;
+  interface_parameters: SourceParameter[];
+  variables_output: z.infer<typeof formSchema.shape.variables_output>;
+  pagination?: string;
 }
 
 const initialStep: Step = {
@@ -152,15 +159,228 @@ const initialStep: Step = {
   description: '',
   command: '',
   method: '',
+  endpoint: '',
+  interface_parameters: [],
+  variables_output: [],
+  pagination: undefined
 };
 
-export const YamlForm: React.FC = () => {
+const initialConnectorConfig = {
+  base_url: '',
+  default_headers: {}, // Connection block will inject automatically
+  default_retry_strategy: {},
+  name: '',
+  variables_metadata: {},
+  variables_storages: [{
+    name: 'results dir',
+    path: '/storage/file_system',
+    type: 'file_system'
+  }]
+};
+
+export function YamlForm() {
+  const [config, setConfig] = useState<YamlConfig>({
+    connector: initialConnectorConfig,
+    steps: []
+  });
+  const [generatedYaml, setGeneratedYaml] = useState<string>('');
+  const [isConnectorExpanded, setIsConnectorExpanded] = useState(false);
+  const [isStepsExpanded, setIsStepsExpanded] = useState(false);
+  const [interfaceParameters, setInterfaceParameters] = useState<InterfaceParameter[]>([]);
+
+  const handleConnectorChange = (field: string, value: any) => {
+    console.log('Connector change:', { field, value });
+    setConfig(prev => ({
+      ...prev,
+      connector: {
+        ...prev.connector,
+        [field]: value
+      }
+    }));
+  };
+
+  const handleAddStep = () => {
+    const newStep: Step = {
+      name: '',
+      description: '',
+      type: 'rest',
+      method: 'GET',
+      endpoint: '',
+      interface_parameters: [],
+      variables_output: []
+    };
+    console.log('Adding new step with interface_parameters:', newStep);
+    setConfig(prev => ({
+      ...prev,
+      steps: [...prev.steps, newStep]
+    }));
+  };
+
+  const handleStepChange = (index: number, field: string, value: any) => {
+    console.log('Step change:', { index, field, value });
+    setConfig(prev => {
+      const newSteps = [...prev.steps];
+      if (field === 'interface_parameters') {
+        console.log('Updating interface parameters:', value);
+      }
+      newSteps[index] = {
+        ...newSteps[index],
+        [field]: value,
+        // Ensure interface_parameters exists when type is 'rest'
+        interface_parameters: field === 'type' 
+          ? (value === 'rest' ? [] : undefined)
+          : newSteps[index].interface_parameters
+      };
+      console.log('Updated step:', newSteps[index]);
+      return {
+        ...prev,
+        steps: newSteps
+      };
+    });
+  };
+
+  const handleDeleteStep = (index: number) => {
+    setConfig(prev => ({
+      ...prev,
+      steps: prev.steps.filter((_, idx) => idx !== index)
+    }));
+  };
+
+  const generateYaml = () => {
+    const cleanConfig = {
+      interface_parameters: {
+        section: {
+          source: interfaceParameters.map(param => {
+            const cleanParam: any = {
+              name: param.name,
+              type: param.type
+            };
+
+            if (param.value) {
+              cleanParam.value = param.value;
+            }
+
+            if (param.type === 'authentication') {
+              cleanParam.auth_type = param.auth_type;
+              if (param.fields?.length > 0) {
+                cleanParam.fields = param.fields;
+              }
+            }
+
+            if (param.type === 'date_range') {
+              cleanParam.period_type = param.period_type;
+              cleanParam.format = param.format;
+              if (param.fields?.length > 0) {
+                cleanParam.fields = param.fields;
+              }
+            }
+
+            return cleanParam;
+          })
+        }
+      },
+      connector: {
+        ...config.connector,
+        default_headers: {},
+        name: config.connector.name || 'default',
+        base_url: config.connector.base_url || '',
+        default_retry_strategy: config.connector.default_retry_strategy || {},
+        variables_metadata: config.connector.variables_metadata || {},
+        variables_storages: config.connector.variables_storages || [{
+          name: 'results dir',
+          path: '/storage/file_system',
+          type: 'file_system'
+        }]
+      },
+      steps: config.steps.map(step => {
+        console.log('Processing step:', step);
+        const cleanStep: any = {
+          name: step.name || '',
+          description: step.description || '',
+          type: step.type || 'rest'
+        };
+
+        if (step.type === 'rest') {
+          cleanStep.method = step.method || 'GET';
+          cleanStep.endpoint = step.endpoint || '';
+
+          if (Array.isArray(step.interface_parameters) && step.interface_parameters.length > 0) {
+            cleanStep.interface_parameters = step.interface_parameters
+              .filter(param => param && param.name && param.type)
+              .map(param => ({
+                name: param.name,
+                type: param.type,
+                required: Boolean(param.required),
+                ...(param.default !== undefined && param.default !== '' ? { default: param.default } : {})
+              }));
+          }
+
+          if (step.pagination) {
+            cleanStep.pagination = {
+              type: step.pagination.type,
+              location: step.pagination.location,
+              parameters: step.pagination.parameters,
+              break_conditions: step.pagination.break_conditions
+            };
+          }
+
+          if (Array.isArray(step.variables_output) && step.variables_output.length > 0) {
+            cleanStep.variables_output = step.variables_output
+              .filter(output => output && (output.response_location || output.variable_name))
+              .map(output => ({
+                response_location: output.response_location,
+                variable_name: output.variable_name,
+                variable_format: output.variable_format,
+                ...(output.transformation_layers && output.transformation_layers.length > 0
+                  ? {
+                      transformation_layers: output.transformation_layers.map(layer => ({
+                        type: layer.type,
+                        from_type: layer.from_type,
+                        ...(layer.type === 'extract_json' ? { json_path: layer.json_path } : {})
+                      }))
+                    }
+                  : {})
+              }));
+          }
+        }
+
+        return cleanStep;
+      })
+    };
+
+    try {
+      let yamlString = yaml.dump(cleanConfig, {
+        indent: 2,
+        lineWidth: -1,
+        noRefs: true,
+        sortKeys: false
+      });
+
+      yamlString = yamlString.replace(
+        'default_headers: {}',
+        'default_headers: {} #Connection block will inject automatically'
+      );
+
+      console.log('Generated YAML:', yamlString);
+      return yamlString;
+    } catch (error) {
+      console.error('Error generating YAML:', error);
+      return 'Error generating YAML';
+    }
+  };
+
+  useEffect(() => {
+    console.log('Config changed, regenerating YAML');
+    const newYaml = generateYaml();
+    setGeneratedYaml(newYaml);
+  }, [config, interfaceParameters]);
+
   const [formData, setFormData] = useState<YamlFormData>(initialFormData);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [yamlPreview, setYamlPreview] = useState<string>('');
-  const [isInterfaceParamsOpen, setInterfaceParamsOpen] = useState(true);
-  const [isConnectorOpen, setConnectorOpen] = useState(true);
-  const [isStepsOpen, setStepsOpen] = useState(true);
+  const [isInterfaceParamsOpen, setInterfaceParamsOpen] = useState(false);
+  const [isConnectorOpen, setConnectorOpen] = useState(false);
+  const [isStepsOpen, setStepsOpen] = useState(false);
 
   const validateForm = (): boolean => {
     // Removed validation logic to allow YAML generation
@@ -169,29 +389,23 @@ export const YamlForm: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Removed validation check
     try {
-      const orderedData = {
-        interface_parameters: formData.interface_parameters,
-        connector: {
-          base_url: formData.connector.base_url,
-          default_headers: formData.connector.default_headers,
-          name: formData.connector.name,
-          variables_metadata: formData.connector.variables_metadata,
-          variables_storages: formData.connector.variables_storages
-        },
-        steps: formData.steps
-      };
-
-      const yamlString = yaml.dump(orderedData, {
+      let yamlString = yaml.dump(formData, {
         indent: 2,
         lineWidth: -1,
-        noRefs: true,
-        sortKeys: false
+        noRefs: true
       });
+
+      // Add the comment after default_headers
+      yamlString = yamlString.replace(
+        'default_headers: {}',
+        'default_headers: {} #Connection block will inject automatically'
+      );
+
       setYamlPreview(yamlString);
     } catch (error) {
       console.error('Error generating YAML:', error);
+      setYamlPreview('Error generating YAML');
     }
   };
 
@@ -421,346 +635,117 @@ export const YamlForm: React.FC = () => {
     );
   };
 
-  const handleAddStep = () => {
-    const newStep = {
-      id: Date.now(),
-      name: '',
-      description: '',
-      endpoint: '{{%BASE_URL%}}/',
-      http_method: 'GET',
-      type: 'rest',
-      variables_output: []
-    };
-
-    setFormData((prevData) => ({
-      ...prevData,
-      steps: [...prevData.steps, newStep],
+  const handleVariablesMetadataChange = (newVariables: Record<string, VariableMetadata>) => {
+    setConfig(prev => ({
+      ...prev,
+      connector: {
+        ...prev.connector,
+        variables_metadata: newVariables
+      }
     }));
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">YAML Generator</h1>
-        <button
-          type="button"
-          onClick={handleSubmit}
-          className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition-colors"
-        >
-          Generate YAML
-        </button>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                {/* <h3 className="font-medium">Interface Parameters</h3> */}
-              </div>
-              
-              {/* Collapsible Interface Parameters Section */}
-              <div className="border p-4 rounded">
-                <h3 className="flex items-center cursor-pointer" onClick={() => setInterfaceParamsOpen(!isInterfaceParamsOpen)}>
-                  <span className="mr-2">{isInterfaceParamsOpen ? '▼' : '►'}</span>
-                  <span>Interface Parameters</span>
-                </h3>
-                <p className="text-sm text-gray-500 mb-2">
-                  The interface parameters element defines the parameters for the interface.
-              </p>
-                {isInterfaceParamsOpen && (
-                  <div className="border p-4 rounded space-y-4 mt-4">
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => addNewParameter('string')}
-                        className="text-sm px-3 py-1 bg-blue-100 text-blue-600 rounded hover:bg-blue-200"
-                      >
-                        + String
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => addNewParameter('authentication')}
-                        className="text-sm px-3 py-1 bg-green-100 text-green-600 rounded hover:bg-green-200"
-                      >
-                        + Auth
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => addNewParameter('date_range')}
-                        className="text-sm px-3 py-1 bg-purple-100 text-purple-600 rounded hover:bg-purple-200"
-                      >
-                        + Date Range
-                      </button>
-                    </div>
-                    {formData.interface_parameters.section.source.map((param, index) => 
-                      renderParameterFields(param as SourceParameter, index)
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
+    <div className="flex justify-center w-full p-4">
+      <div className="flex flex-col lg:flex-row gap-8 w-full max-w-[1600px]">
+        {/* Form Section */}
+        <div className="lg:w-1/2">
+          <div className="space-y-6">
+            {/* Interface Parameters */}
+            <InterfaceParametersForm
+              parameters={interfaceParameters}
+              onChange={setInterfaceParameters}
+            />
 
-            {/* Collapsible Connector Section */}
-            <div className="border p-4 rounded">
-              <h2 className="flex items-center cursor-pointer" onClick={() => setConnectorOpen(!isConnectorOpen)}>
-                <span className="mr-2">{isConnectorOpen ? '▼' : '►'}</span>
-                <span>Connector</span>
-                
-              </h2>
-              <p className="text-sm text-gray-500 mb-2">
-                The connector element defines the connection settings for integrating with an external system or API.
-              </p>
-              {isConnectorOpen && (
-                <div className="border p-4 rounded space-y-4 mt-4">
-                  <div>
-                    <label className="block mb-2">Base URL</label>
-                    <p className="text-sm text-gray-500 mb-2">
-                      Enter the base URL for the connector.
-                    </p>
-                    <input
-                      type="text"
-                      value={formData.connector.base_url}
-                      onChange={(e) => setFormData({ ...formData, connector: { ...formData.connector, base_url: e.target.value } })}
-                      className="border rounded p-2 w-full"
-                    />
-                  </div>
-
-                  {/* Variables Section */}
+            {/* Connector Configuration */}
+            <div className="border rounded-lg overflow-hidden bg-white shadow-sm">
+              <button
+                onClick={() => setIsConnectorExpanded(!isConnectorExpanded)}
+                className="w-full p-4 bg-gray-50 flex justify-between items-center hover:bg-gray-100"
+              >
+                <h2 className="text-lg font-semibold">Connector Configuration</h2>
+                <span>{isConnectorExpanded ? '▼' : '▶'}</span>
+              </button>
+              {isConnectorExpanded && (
+                <div className="p-4">
                   <div className="space-y-4">
-                    <h3 className="font-medium">Variables</h3>
-                    <p className="text-sm text-gray-500 mb-2">
-                      The variables element defines the variables for the connector.
-                    </p>
-                    {Object.entries(formData.connector.variables_metadata).map(([varName, value], index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          value={varName}
-                          onChange={(e) => {
-                            const newVariables: Record<string, { format: string; storage_name: string }> = { ...formData.connector.variables_metadata };
-                            const oldValue = newVariables[varName];
-                            delete newVariables[varName];
-                            newVariables[e.target.value] = oldValue;
-                            setFormData({
-                              ...formData,
-                              connector: {
-                                ...formData.connector,
-                                variables_metadata: {
-                                  ...newVariables,
-                                  final_output_file: {
-                                    format: 'json',
-                                    storage_name: 'results dir'
-                                  }
-                                }
-                              }
-                            });
-                          }}
-                          placeholder="Variable Name"
-                          className="border rounded p-2 flex-grow"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const newVariables = { ...formData.connector.variables_metadata };
-                            delete newVariables[varName];
-                            setFormData({
-                              ...formData,
-                              connector: {
-                                ...formData.connector,
-                                variables_metadata: newVariables
-                              }
-                            });
-                          }}
-                          className="text-red-500 hover:text-red-600"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const newVariables = {
-                          ...formData.connector.variables_metadata,
-                          [`variable_${Object.keys(formData.connector.variables_metadata).length + 1}`]: {
-                            format: 'json',
-                            storage_name: 'results dir'
-                          }
-                        };
-                        setFormData({
-                          ...formData,
-                          connector: {
-                            ...formData.connector,
-                            variables_metadata: newVariables
-                          }
-                        });
-                      }}
-                      className="bg-blue-100 text-blue-600 px-4 py-2 rounded hover:bg-blue-200"
-                    >
-                      + Add Variable
-                    </button>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                      <input
+                        type="text"
+                        value={config.connector.name}
+                        onChange={(e) => handleConnectorChange('name', e.target.value)}
+                        className="w-full p-2 border rounded"
+                        placeholder="Connector Name"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Base URL</label>
+                      <input
+                        type="text"
+                        value={config.connector.base_url}
+                        onChange={(e) => handleConnectorChange('base_url', e.target.value)}
+                        className="w-full p-2 border rounded"
+                        placeholder="Base URL"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Variables Metadata</label>
+                      <VariablesMetadataForm
+                        variables={config.connector.variables_metadata}
+                        onChange={handleVariablesMetadataChange}
+                      />
+                    </div>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Collapsible Steps Section */}
-            <div className="border p-4 rounded">
-              <h3 className="flex items-center cursor-pointer" onClick={() => setStepsOpen(!isStepsOpen)}>
-                <span className="mr-2">{isStepsOpen ? '▼' : '►'}</span>
-                <span>Steps</span>
-              </h3>
-              <p className="text-sm text-gray-500 mb-2">
-                The steps element defines the steps to be executed in the workflow.
-              </p>
-              {isStepsOpen && (
-                <div className="border p-4 rounded space-y-4 mt-4">
-                  {formData.steps.map((step, index) => (
-                    <div key={index} className="p-4 rounded space-y-2">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="font-medium">Step {index + 1}</span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const newSteps = formData.steps.filter((_, i) => i !== index);
-                            setFormData({ ...formData, steps: newSteps });
-                          }}
-                          className="text-red-500 hover:text-red-600"
-                        >
-                          Remove Step
-                        </button>
-                      </div>
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block mb-2">Step Name</label>
-                          <p className="text-sm text-gray-500 mb-2">
-                            A clear, descriptive name for this step. Use names that indicate the step's purpose.
-                          </p>
-                          <input
-                            type="text"
-                            value={step.name}
-                            onChange={(e) => {
-                              const newSteps = [...formData.steps];
-                              newSteps[index] = { ...step, name: e.target.value };
-                              setFormData({ ...formData, steps: newSteps });
-                            }}
-                            className="w-full p-2 border rounded"
-                            placeholder="Enter step name"
-                          />
-                        </div>
-                        <div>
-                          <label className="block mb-2">Description</label>
-                          <p className="text-sm text-gray-500 mb-2">
-                            Detailed explanation of what this step does. Include any important details about its execution.
-                          </p>
-                          <textarea
-                            value={step.description}
-                            onChange={(e) => {
-                              const newSteps = [...formData.steps];
-                              newSteps[index] = { ...step, description: e.target.value };
-                              setFormData({ ...formData, steps: newSteps });
-                            }}
-                            className="w-full p-2 border rounded"
-                            placeholder="Enter step description"
-                            rows={2}
-                          />
-                        </div>
-                        <div>
-                          <label className="block mb-2">Method</label>
-                          <p className="text-sm text-gray-500 mb-2">
-                            Select the HTTP method for this step. Choose GET for retrieving data or POST for sending data.
-                          </p>
-                          <select
-                            value={step.http_method}
-                            onChange={(e) => {
-                              const newSteps = [...formData.steps];
-                              newSteps[index] = { ...step, http_method: e.target.value as 'GET' | 'POST' | 'PUT' | 'DELETE' };
-                              setFormData({ ...formData, steps: newSteps });
-                            }}
-                            className="w-full p-2 border rounded bg-white"
-                          >
-                            <option value="">Select a method</option>
-                            <option value="GET">GET</option>
-                            <option value="POST">POST</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block mb-2">Path</label>
-                          <p className="text-sm text-gray-500 mb-2">
-                          Enter the path to the report.</p>
-                          <input
-                            type="text"
-                            value={step.endpoint}
-                            onChange={(e) => {
-                              const newSteps = [...formData.steps];
-                              newSteps[index] = { ...step, endpoint: e.target.value };
-                              setFormData({ ...formData, steps: newSteps });
-                            }}
-                            className="border rounded p-2 w-full"
-                            placeholder="Enter endpoint path"
-                          />
-                        </div>
-                      </div>
-                    </div>
+            {/* Steps Configuration */}
+            <div className="border rounded-lg overflow-hidden bg-white shadow-sm">
+              <button
+                onClick={() => setIsStepsExpanded(!isStepsExpanded)}
+                className="w-full p-4 bg-gray-50 flex justify-between items-center hover:bg-gray-100"
+              >
+                <h2 className="text-lg font-semibold">Workflow Steps</h2>
+                <span>{isStepsExpanded ? '▼' : '▶'}</span>
+              </button>
+              {isStepsExpanded && (
+                <div className="p-4">
+                  {config.steps.map((step, index) => (
+                    <StepForm
+                      key={index}
+                      step={step}
+                      index={index}
+                      onStepChange={handleStepChange}
+                      onDeleteStep={handleDeleteStep}
+                    />
                   ))}
                   <button
                     type="button"
-                    onClick={() => {
-                      const newStep = {
-                        id: Date.now(),
-                        name: '',
-                        description: '',
-                        endpoint: '{{%BASE_URL%}}/',
-                        http_method: 'GET',
-                        type: 'rest',
-                        variables_output: []
-                      };
-                      setFormData({
-                        ...formData,
-                        steps: [...formData.steps, newStep],
-                      });
-                    }}
-                    className="bg-green-100 text-green-600 px-4 py-2 rounded hover:bg-green-200"
+                    onClick={handleAddStep}
+                    className="mt-4 px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 w-full"
                   >
-                    + Add Step
+                    Add Step
                   </button>
                 </div>
               )}
             </div>
-          </form>
+          </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow">
-          <div className="border-b p-4 flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Preview</h2>
-            <div className="flex gap-2">
-              {yamlPreview && (
-                <>
-                  <button
-                    onClick={copyYaml}
-                    className="p-2 hover:bg-gray-100 rounded transition-colors"
-                    title="Copy to clipboard"
-                  >
-                    <Copy className="w-5 h-5 text-gray-600" />
-                  </button>
-                  <button
-                    onClick={downloadYaml}
-                    className="p-2 hover:bg-gray-100 rounded transition-colors"
-                    title="Download YAML"
-                  >
-                    <Download className="w-5 h-5 text-gray-600" />
-                  </button>
-                </>
-              )}
+        {/* YAML Output Section */}
+        <div className="lg:w-1/2">
+          <div className="sticky top-4">
+            <div className="bg-white rounded-lg shadow-sm border p-4">
+              <h2 className="text-lg font-semibold mb-4">Generated YAML</h2>
+              <pre className="bg-white border rounded-lg p-4 overflow-auto max-h-[80vh] whitespace-pre-wrap font-mono text-sm">
+                {generatedYaml || 'No YAML generated yet'}
+              </pre>
             </div>
           </div>
-          <pre className="p-4 overflow-auto max-h-[600px] bg-white">
-            <code className="text-gray-800">{yamlPreview || 'Generated YAML will appear here'}</code>
-          </pre>
         </div>
       </div>
     </div>
   );
-};
+}
