@@ -2,7 +2,7 @@ connector:
   base_url: "https://api.openai.com/v1"
   default_headers:
     Accept: application/json
-    Authorization: Basic "{authorization}"
+    authentication: Basic "{authentication}"
   default_retry_strategy: {}
   name: "openai_connector"
   variables_metadata:

@@ -32,14 +32,23 @@ export interface Field {
   value: string;
 }
 
-export interface InterfaceParameter {
+export interface AuthField {
   name: string;
   type: string;
-  value?: string;
-  auth_type?: string;
+  value: string;
+  is_encrypted?: boolean;
+}
+
+export interface InterfaceParameter {
+  name: string;
+  type: 'string' | 'authentication' | 'date_range';
+  auth_type?: 'basic_http' | 'bearer' | 'api_key';
+  location?: 'header' | 'query_param';
+  fields?: AuthField[];
+  description?: string;
   period_type?: string;
   format?: string;
-  fields?: Field[];
+  value?: string;
 }
 
 export interface InterfaceParametersSection {

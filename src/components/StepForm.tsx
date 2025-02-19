@@ -151,6 +151,8 @@ function StepForm({ step, index, onStepChange, onDeleteStep, isNested = false }:
           <div className="space-y-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+              <span className="block font-normal text-gray-500">Name your step</span>
+
               <input
                 type="text"
                 value={step.name || ''}

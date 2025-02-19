@@ -180,13 +180,30 @@ const initialConnectorConfig = {
 
 export function YamlForm() {
   const [config, setConfig] = useState<YamlConfig>({
-    connector: initialConnectorConfig,
+    connector: {
+      name: '',
+      base_url: '',
+      default_headers: {},
+      default_retry_strategy: {},
+      variables_metadata: {
+        final_output_file: {
+          format: 'json',
+          storage_name: 'results dir'
+        }
+      },
+      variables_storages: [{
+        name: 'results dir',
+        path: '/storage/file_system',
+        type: 'file_system'
+      }]
+    },
     steps: []
   });
   const [generatedYaml, setGeneratedYaml] = useState<string>('');
   const [isConnectorExpanded, setIsConnectorExpanded] = useState(false);
   const [isStepsExpanded, setIsStepsExpanded] = useState(false);
   const [interfaceParameters, setInterfaceParameters] = useState<InterfaceParameter[]>([]);
+  const [parameters, setParameters] = useState<InterfaceParameter[]>([]);
 
   const handleConnectorChange = (field: string, value: any) => {
     console.log('Connector change:', { field, value });
@@ -246,134 +263,120 @@ export function YamlForm() {
     }));
   };
 
+  useEffect(() => {
+    console.log('Parameters updated:', parameters);
+    generateYaml();
+  }, [parameters, config]);
+
   const generateYaml = () => {
-    const cleanConfig = {
-      interface_parameters: {
-        section: {
-          source: interfaceParameters.map(param => {
-            const cleanParam: any = {
-              name: param.name,
-              type: param.type
-            };
-
-            if (param.value) {
-              cleanParam.value = param.value;
-            }
-
-            if (param.type === 'authentication') {
-              cleanParam.auth_type = param.auth_type;
-              if (param.fields?.length > 0) {
-                cleanParam.fields = param.fields;
-              }
-            }
-
-            if (param.type === 'date_range') {
-              cleanParam.period_type = param.period_type;
-              cleanParam.format = param.format;
-              if (param.fields?.length > 0) {
-                cleanParam.fields = param.fields;
-              }
-            }
-
-            return cleanParam;
+    const removeEmpty = (obj: any): any => {
+      return Object.fromEntries(
+        Object.entries(obj)
+          .filter(([key, value]) => {
+            if (key === 'variables_metadata') return true;
+            if (value === null || value === undefined) return false;
+            if (typeof value === 'string' && value.trim() === '') return false;
+            if (Array.isArray(value) && value.length === 0) return false;
+            if (typeof value === 'object' && Object.keys(value).length === 0 && key !== 'variables_metadata') return false;
+            return true;
           })
+          .map(([key, value]) => {
+            if (typeof value === 'object' && !Array.isArray(value)) {
+              const cleaned = removeEmpty(value);
+              if (key === 'variables_metadata' && Object.keys(cleaned).length === 0) {
+                return [key, {}];
+              }
+              return [key, cleaned];
+            }
+            return [key, value];
+          })
+      );
+    };
+
+    const dynamicParameters = parameters.filter(param => {
+      if (!param.name || !param.type) return false;
+
+      switch (param.type) {
+        case 'string':
+          return param.value !== undefined && param.value !== '';
+        case 'date_range':
+          return true;
+        case 'authorization':
+          return true;
+        default:
+          return false;
+      }
+    });
+
+    const cleanConfig = {
+      ...(dynamicParameters.length > 0 && {
+        interface_parameters: {
+          section: {
+            source: dynamicParameters.map(param => {
+              const cleanParam: any = {
+                name: param.name,
+                type: param.type
+              };
+
+              if (param.type === 'string' && param.value) {
+                cleanParam.value = param.value;
+              }
+
+              if (param.type === 'date_range') {
+                cleanParam.period_type = param.period_type;
+                cleanParam.format = param.format;
+                if (param.fields) {
+                  cleanParam.fields = param.fields;
+                }
+              }
+
+              if (param.type === 'authorization') {
+                cleanParam.auth_type = param.auth_type;
+                if (param.auth_type === 'api_key') {
+                  cleanParam.location = param.location || 'header';
+                }
+                if (param.fields) {
+                  cleanParam.fields = param.fields.map(field => ({
+                    name: field.name,
+                    type: field.type,
+                    value: field.value,
+                    ...(field.is_encrypted ? { is_encrypted: true } : {})
+                  }));
+                }
+                if (param.description) {
+                  cleanParam.description = param.description;
+                }
+              }
+
+              return cleanParam;
+            })
+          }
         }
-      },
+      }),
       connector: {
         ...config.connector,
-        default_headers: {},
-        name: config.connector.name || 'default',
-        base_url: config.connector.base_url || '',
-        default_retry_strategy: config.connector.default_retry_strategy || {},
-        variables_metadata: config.connector.variables_metadata || {},
-        variables_storages: config.connector.variables_storages || [{
-          name: 'results dir',
-          path: '/storage/file_system',
-          type: 'file_system'
-        }]
+        variables_metadata: config.connector.variables_metadata
       },
       steps: config.steps.map(step => {
-        console.log('Processing step:', step);
-        const cleanStep: any = {
-          name: step.name || '',
-          description: step.description || '',
-          type: step.type || 'rest'
-        };
-
-        if (step.type === 'rest') {
-          cleanStep.method = step.method || 'GET';
-          cleanStep.endpoint = step.endpoint || '';
-
-          if (Array.isArray(step.interface_parameters) && step.interface_parameters.length > 0) {
-            cleanStep.interface_parameters = step.interface_parameters
-              .filter(param => param && param.name && param.type)
-              .map(param => ({
-                name: param.name,
-                type: param.type,
-                required: Boolean(param.required),
-                ...(param.default !== undefined && param.default !== '' ? { default: param.default } : {})
-              }));
-          }
-
-          if (step.pagination) {
-            cleanStep.pagination = {
-              type: step.pagination.type,
-              location: step.pagination.location,
-              parameters: step.pagination.parameters,
-              break_conditions: step.pagination.break_conditions
-            };
-          }
-
-          if (Array.isArray(step.variables_output) && step.variables_output.length > 0) {
-            cleanStep.variables_output = step.variables_output
-              .filter(output => output && (output.response_location || output.variable_name))
-              .map(output => ({
-                response_location: output.response_location,
-                variable_name: output.variable_name,
-                variable_format: output.variable_format,
-                ...(output.transformation_layers && output.transformation_layers.length > 0
-                  ? {
-                      transformation_layers: output.transformation_layers.map(layer => ({
-                        type: layer.type,
-                        from_type: layer.from_type,
-                        ...(layer.type === 'extract_json' ? { json_path: layer.json_path } : {})
-                      }))
-                    }
-                  : {})
-              }));
-          }
-        }
-
-        return cleanStep;
+        const { interface_parameters, variables_metadata, ...restStep } = step;
+        return restStep;
       })
     };
 
     try {
-      let yamlString = yaml.dump(cleanConfig, {
+      const yamlString = yaml.dump(cleanConfig, {
         indent: 2,
         lineWidth: -1,
         noRefs: true,
-        sortKeys: false
+        sortKeys: false,
+        skipInvalid: true
       });
-
-      yamlString = yamlString.replace(
-        'default_headers: {}',
-        'default_headers: {} #Connection block will inject automatically'
-      );
-
-      console.log('Generated YAML:', yamlString);
-      return yamlString;
+      setGeneratedYaml(yamlString);
     } catch (error) {
       console.error('Error generating YAML:', error);
-      return 'Error generating YAML';
+      setGeneratedYaml('Error generating YAML');
     }
   };
-
-  useEffect(() => {
-    console.log('Config changed, regenerating YAML');
-    const newYaml = generateYaml();
-    setGeneratedYaml(newYaml);
-  }, [config, interfaceParameters]);
 
   const [formData, setFormData] = useState<YamlFormData>(initialFormData);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -635,14 +638,19 @@ export function YamlForm() {
     );
   };
 
-  const handleVariablesMetadataChange = (newVariables: Record<string, VariableMetadata>) => {
-    setConfig(prev => ({
-      ...prev,
+  const handleVariablesMetadataChange = (newMetadata: Record<string, any>) => {
+    setConfig(prevConfig => ({
+      ...prevConfig,
       connector: {
-        ...prev.connector,
-        variables_metadata: newVariables
+        ...prevConfig.connector,
+        variables_metadata: newMetadata
       }
     }));
+  };
+
+  const handleParametersChange = (newParameters: InterfaceParameter[]) => {
+    console.log('New parameters:', newParameters);
+    setParameters(newParameters);
   };
 
   return (
@@ -653,8 +661,8 @@ export function YamlForm() {
           <div className="space-y-6">
             {/* Interface Parameters */}
             <InterfaceParametersForm
-              parameters={interfaceParameters}
-              onChange={setInterfaceParameters}
+              parameters={parameters}
+              onChange={handleParametersChange}
             />
 
             {/* Connector Configuration */}
@@ -663,7 +671,7 @@ export function YamlForm() {
                 onClick={() => setIsConnectorExpanded(!isConnectorExpanded)}
                 className="w-full p-4 bg-gray-50 flex justify-between items-center hover:bg-gray-100"
               >
-                <h2 className="text-lg font-semibold">Connector Configuration</h2>
+                <h2 className="text-md font-semibold">Connector Configuration</h2>
                 <span>{isConnectorExpanded ? '▼' : '▶'}</span>
               </button>
               {isConnectorExpanded && (
@@ -692,7 +700,7 @@ export function YamlForm() {
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Variables Metadata</label>
                       <VariablesMetadataForm
-                        variables={config.connector.variables_metadata}
+                        metadata={config.connector.variables_metadata}
                         onChange={handleVariablesMetadataChange}
                       />
                     </div>
@@ -707,7 +715,7 @@ export function YamlForm() {
                 onClick={() => setIsStepsExpanded(!isStepsExpanded)}
                 className="w-full p-4 bg-gray-50 flex justify-between items-center hover:bg-gray-100"
               >
-                <h2 className="text-lg font-semibold">Workflow Steps</h2>
+                <h2 className="text-md font-semibold">Workflow Steps</h2>
                 <span>{isStepsExpanded ? '▼' : '▶'}</span>
               </button>
               {isStepsExpanded && (

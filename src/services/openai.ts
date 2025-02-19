@@ -11,7 +11,7 @@ Analyze the following scraped data and extract information to create a connector
 
 1. Connector Section:
    - Find and extract the base URL
-   - Identify any authorization methods or requirements
+   - Identify any authentication methods or requirements
    - Determine the HTTP methods used
 
 2. Steps Section:
