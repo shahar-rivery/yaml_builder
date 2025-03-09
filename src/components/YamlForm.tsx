@@ -6,6 +6,7 @@ import { YamlConfig, Step, InterfaceParameter, VariableMetadata } from '../types
 import StepForm from './StepForm';
 import { InterfaceParametersForm } from './InterfaceParametersForm';
 import { VariablesMetadataForm } from './VariablesMetadataForm';
+import { ConnectorForm } from './ConnectorForm';
 
 const formSchema = z.object({
   interface_parameters: z.object({
@@ -160,7 +161,7 @@ const initialStep: Step = {
   command: '',
   method: '',
   endpoint: '',
-  interface_parameters: [],
+  // interface_parameters: [],
   variables_output: [],
   pagination: undefined
 };
@@ -184,16 +185,9 @@ export function YamlForm() {
       name: '',
       base_url: '',
       default_headers: {},
-      default_retry_strategy: {},
-      variables_metadata: {
-        final_output_file: {
-          format: 'json',
-          storage_name: 'results dir'
-        }
-      },
+      variables_metadata: {},
       variables_storages: [{
         name: 'results dir',
-        path: '/storage/file_system',
         type: 'file_system'
       }]
     },
@@ -204,6 +198,7 @@ export function YamlForm() {
   const [isStepsExpanded, setIsStepsExpanded] = useState(false);
   const [interfaceParameters, setInterfaceParameters] = useState<InterfaceParameter[]>([]);
   const [parameters, setParameters] = useState<InterfaceParameter[]>([]);
+  const [copySuccess, setCopySuccess] = useState(false);
 
   const handleConnectorChange = (field: string, value: any) => {
     console.log('Connector change:', { field, value });
@@ -223,7 +218,7 @@ export function YamlForm() {
       type: 'rest',
       method: 'GET',
       endpoint: '',
-      interface_parameters: [],
+      // interface_parameters: [],
       variables_output: []
     };
     console.log('Adding new step with interface_parameters:', newStep);
@@ -269,112 +264,165 @@ export function YamlForm() {
   }, [parameters, config]);
 
   const generateYaml = () => {
-    const removeEmpty = (obj: any): any => {
-      return Object.fromEntries(
-        Object.entries(obj)
-          .filter(([key, value]) => {
-            if (key === 'variables_metadata') return true;
-            if (value === null || value === undefined) return false;
-            if (typeof value === 'string' && value.trim() === '') return false;
-            if (Array.isArray(value) && value.length === 0) return false;
-            if (typeof value === 'object' && Object.keys(value).length === 0 && key !== 'variables_metadata') return false;
-            return true;
-          })
-          .map(([key, value]) => {
-            if (typeof value === 'object' && !Array.isArray(value)) {
-              const cleaned = removeEmpty(value);
-              if (key === 'variables_metadata' && Object.keys(cleaned).length === 0) {
-                return [key, {}];
-              }
-              return [key, cleaned];
-            }
-            return [key, value];
-          })
-      );
-    };
+    console.log('Generating YAML with parameters:', parameters);
+    
+    let yamlString = '';
+    
+    // Generate interface parameters with quotes
+    const interfaceConfig: any = {};
+    if (parameters.length > 0) {
+      const validParameters = parameters.filter(param => {
+        if (!param.name || !param.type) return false;
+        return true;
+      });
 
-    const dynamicParameters = parameters.filter(param => {
-      if (!param.name || !param.type) return false;
-
-      switch (param.type) {
-        case 'string':
-          return param.value !== undefined && param.value !== '';
-        case 'date_range':
-          return true;
-        case 'authorization':
-          return true;
-        default:
-          return false;
-      }
-    });
-
-    const cleanConfig = {
-      ...(dynamicParameters.length > 0 && {
-        interface_parameters: {
+      if (validParameters.length > 0) {
+        interfaceConfig.interface_parameters = {
           section: {
-            source: dynamicParameters.map(param => {
-              const cleanParam: any = {
+            source: validParameters.map(param => {
+              const paramConfig: any = {
                 name: param.name,
                 type: param.type
               };
 
-              if (param.type === 'string' && param.value) {
-                cleanParam.value = param.value;
+              if (param.type === 'string') {
+                paramConfig.value = param.value || '';
               }
 
               if (param.type === 'date_range') {
-                cleanParam.period_type = param.period_type;
-                cleanParam.format = param.format;
-                if (param.fields) {
-                  cleanParam.fields = param.fields;
-                }
+                paramConfig.period_type = param.period_type || 'datetime';
+                paramConfig.format = param.period_type === 'datetime' 
+                  ? 'YYYY-MM-DDTHH:MM:SSZ' 
+                  : 'YYYY-MM-DD';
+                paramConfig.fields = [
+                  { 
+                    name: 'start_date',
+                    value: param.fields?.[0]?.value || ''
+                  },
+                  { 
+                    name: 'end_date',
+                    value: param.fields?.[1]?.value || ''
+                  }
+                ];
               }
 
               if (param.type === 'authorization') {
-                cleanParam.auth_type = param.auth_type;
-                if (param.auth_type === 'api_key') {
-                  cleanParam.location = param.location || 'header';
-                }
-                if (param.fields) {
-                  cleanParam.fields = param.fields.map(field => ({
-                    name: field.name,
-                    type: field.type,
-                    value: field.value,
-                    ...(field.is_encrypted ? { is_encrypted: true } : {})
-                  }));
-                }
-                if (param.description) {
-                  cleanParam.description = param.description;
+                paramConfig.type = 'authentication';
+                paramConfig.auth_type = param.auth_type || 'bearer';
+                
+                switch (param.auth_type) {
+                  case 'bearer':
+                    paramConfig.fields = [{
+                      name: 'bearer_token',
+                      type: 'string',
+                      value: '',
+                      is_encrypted: true
+                    }];
+                    break;
+                  
+                  case 'basic':
+                    paramConfig.fields = [
+                      {
+                        name: 'username',
+                        type: 'string',
+                        value: '',
+                        is_encrypted: true
+                      },
+                      {
+                        name: 'password',
+                        type: 'string',
+                        value: '',
+                        is_encrypted: true
+                      }
+                    ];
+                    break;
+                  
+                  case 'token':
+                    paramConfig.fields = [{
+                      name: 'api_token',
+                      type: 'string',
+                      value: '',
+                      is_encrypted: true
+                    }];
+                    break;
                 }
               }
 
-              return cleanParam;
+              return paramConfig;
             })
           }
-        }
-      }),
+        };
+
+        // Generate interface parameters with quotes
+        const interfaceYaml = yaml.dump(interfaceConfig, {
+          indent: 2,
+          lineWidth: -1,
+          noRefs: true,
+          sortKeys: false,
+          skipInvalid: true,
+          quotingType: '"',
+          forceQuotes: true
+        });
+        yamlString += interfaceYaml;
+      }
+    }
+
+    // Generate connector without quotes
+    const connectorConfig = {
       connector: {
-        ...config.connector,
-        variables_metadata: config.connector.variables_metadata
-      },
-      steps: config.steps.map(step => {
-        const { interface_parameters, variables_metadata, ...restStep } = step;
-        return restStep;
-      })
+        name: config.connector.name || '',
+        base_url: config.connector.base_url || '',
+        default_headers: config.connector.default_headers || {},
+        variables_metadata: config.connector.variables_metadata || {},
+        variables_storages: config.connector.variables_storages || [{
+          name: 'results dir',
+          type: 'file_system'
+        }]
+      }
     };
 
-    try {
-      const yamlString = yaml.dump(cleanConfig, {
+    const connectorYaml = yaml.dump(connectorConfig, {
+      indent: 2,
+      lineWidth: -1,
+      noRefs: true,
+      sortKeys: false,
+      skipInvalid: true,
+      quotingType: '"',
+      forceQuotes: false
+    });
+    yamlString += connectorYaml;
+
+    // Generate steps if they exist
+    if (config.steps && config.steps.length > 0) {
+      const stepsConfig = {
+        steps: config.steps.map(step => ({
+          name: step.name || '',
+          request: {
+            http_method: step.http_method || 'GET',
+            url: step.endpoint || ''
+          }
+        }))
+      };
+
+      const stepsYaml = yaml.dump(stepsConfig, {
         indent: 2,
         lineWidth: -1,
         noRefs: true,
         sortKeys: false,
-        skipInvalid: true
+        skipInvalid: true,
+        quotingType: '"',
+        forceQuotes: false
       });
+      yamlString += stepsYaml;  // Steps will be added last
+    }
+
+    try {
+      // Validate the generated YAML by attempting to parse it
+      yaml.load(yamlString);
       setGeneratedYaml(yamlString);
     } catch (error) {
       console.error('Error generating YAML:', error);
-      setGeneratedYaml('Error generating YAML');
+      setGeneratedYaml('Error: Invalid YAML structure');
     }
   };
 
@@ -653,6 +701,16 @@ export function YamlForm() {
     setParameters(newParameters);
   };
 
+  const handleCopyClick = async () => {
+    try {
+      await navigator.clipboard.writeText(generatedYaml);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000); // Reset after 2 seconds
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
+  };
+
   return (
     <div className="flex justify-center w-full p-4">
       <div className="flex flex-col lg:flex-row gap-8 w-full max-w-[1600px]">
@@ -746,7 +804,31 @@ export function YamlForm() {
         <div className="lg:w-1/2">
           <div className="sticky top-4">
             <div className="bg-white rounded-lg shadow-sm border p-4">
-              <h2 className="text-lg font-semibold mb-4">Generated YAML</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold">Generated YAML</h2>
+                <button
+                  onClick={handleCopyClick}
+                  className="flex items-center space-x-1 px-2 py-1 text-sm text-gray-600 hover:text-blue-600 transition-colors rounded-md hover:bg-blue-50"
+                  title="Copy to clipboard"
+                >
+                  {copySuccess ? (
+                    <>
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                          d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                      </svg>
+                      <span>Copy</span>
+                    </>
+                  )}
+                </button>
+              </div>
               <pre className="bg-white border rounded-lg p-4 overflow-auto max-h-[80vh] whitespace-pre-wrap font-mono text-sm">
                 {generatedYaml || 'No YAML generated yet'}
               </pre>

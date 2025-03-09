@@ -14,7 +14,6 @@ connector:
       storage_name: results dir 
   variables_storages:
   - name: results dir
-    path: /storage/file_system
     type: file_system
 
 steps:

@@ -32,6 +32,10 @@ interface Step {
   steps?: Step[];
   interface_parameters?: InterfaceParameter[];
   pagination?: Pagination;
+  request?: {
+    method?: string;
+    url?: string;
+  };
 }
 
 interface InterfaceParameter {
@@ -133,6 +137,17 @@ function StepForm({ step, index, onStepChange, onDeleteStep, isNested = false }:
   const handleDeleteInterfaceParameter = (paramIndex: number) => {
     const newParams = (step.interface_parameters || []).filter((_, idx) => idx !== paramIndex);
     onStepChange(index, 'interface_parameters', newParams);
+  };
+
+  const handleAddStep = () => {
+    const newStep: Step = {
+      name: '',
+      request: {
+        method: 'GET',
+        url: ''
+      }
+    };
+    onStepChange(index, 'steps', [...(step.steps || []), newStep]);
   };
 
   return (

@@ -62,15 +62,10 @@ export interface InterfaceParameters {
 // Update the Step interface
 export interface Step {
   name: string;
-  description: string;
-  endpoint?: string;
-  method?: string;
-  type: 'rest' | 'loop';
-  pagination?: Pagination;
-  variables_output?: VariableOutput[];
-  loop?: Loop;
-  steps?: Step[];
-  interface_parameters?: InterfaceParameter[];
+  request: {
+    method: string;
+    url: string;
+  };
 }
 
 export interface VariableMetadata {
@@ -82,12 +77,10 @@ export interface VariableMetadata {
 export interface Connector {
   name: string;
   base_url: string;
-  default_headers: Record<string, any>;
-  default_retry_strategy: Record<string, any>;
-  variables_metadata: Record<string, VariableMetadata>;
+  default_headers: Record<string, string>;
+  variables_metadata: Record<string, any>;
   variables_storages: Array<{
     name: string;
-    path: string;
     type: string;
   }>;
 } 

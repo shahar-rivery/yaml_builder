@@ -18,6 +18,71 @@ export function InterfaceParametersForm({ parameters, onChange }: InterfaceParam
     onChange([...parameters, newParam]);
   };
 
+  const handleAuthTypeChange = (index: number, authType: string) => {
+    const newParams = [...parameters];
+    const param = newParams[index];
+    let fields;
+
+    switch (authType) {
+      case 'bearer':
+        fields = [{
+          name: 'bearer_token',
+          type: 'string',
+          value: '',
+          is_encrypted: true
+        }];
+        break;
+      case 'basic':
+        fields = [
+          {
+            name: 'username',
+            type: 'string',
+            value: '',
+            is_encrypted: true
+          },
+          {
+            name: 'password',
+            type: 'string',
+            value: '',
+            is_encrypted: true
+          }
+        ];
+        break;
+      case 'token':
+        fields = [{
+          name: 'api_token',
+          type: 'string',
+          value: '',
+          is_encrypted: true
+        }];
+        break;
+    }
+
+    newParams[index] = {
+      ...param,
+      auth_type: authType,
+      fields
+    };
+    onChange(newParams);
+  };
+
+  const handleDateRangeTypeChange = (index: number, periodType: string) => {
+    const newParams = [...parameters];
+    const param = newParams[index];
+    const format = periodType === 'datetime' ? 'YYYY-MM-DDTHH:MM:SSZ' : 'YYYY-MM-DD';
+    
+    newParams[index] = {
+      ...param,
+      period_type: periodType,
+      format,
+      fields: [
+        { name: 'start_date', value: '' },
+        { name: 'end_date', value: '' }
+      ]
+    };
+    onChange(newParams);
+  };
+
   const handleParameterChange = (index: number, field: string, value: any) => {
     const newParams = [...parameters];
     const param = newParams[index];
@@ -141,7 +206,7 @@ export function InterfaceParametersForm({ parameters, onChange }: InterfaceParam
         className="w-full p-2 bg-gray-50 flex justify-between items-center hover:bg-gray-100 transition-colors"
       >
         <div className="flex items-center space-x-2">
-          <h2 className="text-lg font-medium">Interface Parameters</h2>
+          <h2 className="text-sm font-medium">Interface Parameters</h2>
           {parameters.length > 0 && (
             <span className="px-1.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
               {parameters.length}
@@ -152,6 +217,7 @@ export function InterfaceParametersForm({ parameters, onChange }: InterfaceParam
           ▼
         </span>
       </button>
+
       {isExpanded && (
         <div className="p-3">
           {parameters.length === 0 ? (
@@ -209,6 +275,73 @@ export function InterfaceParametersForm({ parameters, onChange }: InterfaceParam
                       </select>
                     </div>
                   </div>
+
+                  {param.type === 'authorization' && (
+                    <div className="mt-2 space-y-1">
+                      <label className="block text-xs font-medium text-gray-700">Auth Type</label>
+                      <select
+                        value={param.auth_type || 'bearer'}
+                        onChange={(e) => handleAuthTypeChange(index, e.target.value)}
+                        className="w-full p-1 border rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="bearer">Bearer</option>
+                        <option value="basic">Basic</option>
+                        <option value="token">Token</option>
+                      </select>
+                    </div>
+                  )}
+
+                  {param.type === 'date_range' && (
+                    <div className="mt-2 space-y-1">
+                      <label className="block text-xs font-medium text-gray-700">Date Range Type</label>
+                      <select
+                        value={param.period_type || 'datetime'}
+                        onChange={(e) => handleDateRangeTypeChange(index, e.target.value)}
+                        className="w-full p-1 border rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="datetime">DateTime</option>
+                        <option value="date">Date</option>
+                      </select>
+                      {param.fields && (
+                        <div className="grid grid-cols-2 gap-2 mt-2">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700">Start Date</label>
+                            <input
+                              type="text"
+                              value={param.fields[0]?.value || ''}
+                              onChange={(e) => {
+                                const newParams = [...parameters];
+                                if (!newParams[index].fields) {
+                                  newParams[index].fields = [{ name: 'start_date' }, { name: 'end_date' }];
+                                }
+                                newParams[index].fields[0].value = e.target.value;
+                                onChange(newParams);
+                              }}
+                              className="w-full p-1 border rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                              placeholder={param.period_type === 'datetime' ? 'YYYY-MM-DDTHH:MM:SSZ' : 'YYYY-MM-DD'}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-700">End Date</label>
+                            <input
+                              type="text"
+                              value={param.fields[1]?.value || ''}
+                              onChange={(e) => {
+                                const newParams = [...parameters];
+                                if (!newParams[index].fields) {
+                                  newParams[index].fields = [{ name: 'start_date' }, { name: 'end_date' }];
+                                }
+                                newParams[index].fields[1].value = e.target.value;
+                                onChange(newParams);
+                              }}
+                              className="w-full p-1 border rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                              placeholder={param.period_type === 'datetime' ? 'YYYY-MM-DDTHH:MM:SSZ' : 'YYYY-MM-DD'}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
