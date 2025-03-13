@@ -705,134 +705,72 @@ export function YamlForm() {
     try {
       await navigator.clipboard.writeText(generatedYaml);
       setCopySuccess(true);
-      setTimeout(() => setCopySuccess(false), 2000); // Reset after 2 seconds
+      setTimeout(() => setCopySuccess(false), 2000);
     } catch (err) {
       console.error('Failed to copy text: ', err);
     }
   };
 
   return (
-    <div className="flex justify-center w-full p-4">
-      <div className="flex flex-col lg:flex-row gap-8 w-full max-w-[1600px]">
-        {/* Form Section */}
-        <div className="lg:w-1/2">
-          <div className="space-y-6">
-            {/* Interface Parameters */}
-            <InterfaceParametersForm
-              parameters={parameters}
-              onChange={handleParametersChange}
-            />
-
-            {/* Connector Configuration */}
-            <div className="border rounded-lg overflow-hidden bg-white shadow-sm">
-              <button
-                onClick={() => setIsConnectorExpanded(!isConnectorExpanded)}
-                className="w-full p-4 bg-gray-50 flex justify-between items-center hover:bg-gray-100"
-              >
-                <h2 className="text-md font-semibold">Connector Configuration</h2>
-                <span>{isConnectorExpanded ? '▼' : '▶'}</span>
-              </button>
-              {isConnectorExpanded && (
-                <div className="p-4">
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                      <input
-                        type="text"
-                        value={config.connector.name}
-                        onChange={(e) => handleConnectorChange('name', e.target.value)}
-                        className="w-full p-2 border rounded"
-                        placeholder="Connector Name"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Base URL</label>
-                      <input
-                        type="text"
-                        value={config.connector.base_url}
-                        onChange={(e) => handleConnectorChange('base_url', e.target.value)}
-                        className="w-full p-2 border rounded"
-                        placeholder="Base URL"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Variables Metadata</label>
-                      <VariablesMetadataForm
-                        metadata={config.connector.variables_metadata}
-                        onChange={handleVariablesMetadataChange}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Steps Configuration */}
-            <div className="border rounded-lg overflow-hidden bg-white shadow-sm">
-              <button
-                onClick={() => setIsStepsExpanded(!isStepsExpanded)}
-                className="w-full p-4 bg-gray-50 flex justify-between items-center hover:bg-gray-100"
-              >
-                <h2 className="text-md font-semibold">Workflow Steps</h2>
-                <span>{isStepsExpanded ? '▼' : '▶'}</span>
-              </button>
-              {isStepsExpanded && (
-                <div className="p-4">
-                  {config.steps.map((step, index) => (
-                    <StepForm
-                      key={index}
-                      step={step}
-                      index={index}
-                      onStepChange={handleStepChange}
-                      onDeleteStep={handleDeleteStep}
-                    />
-                  ))}
-                  <button
-                    type="button"
-                    onClick={handleAddStep}
-                    className="mt-4 px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 w-full"
-                  >
-                    Add Step
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
+    <div className="flex flex-col lg:flex-row gap-8">
+      <div className="lg:w-1/2">
+        <div className="space-y-6">
+          <InterfaceParametersForm
+            parameters={parameters}
+            onChange={handleParametersChange}
+          />
+          <ConnectorForm
+            connector={config.connector}
+            onChange={(newConnector) => setConfig({ ...config, connector: newConnector })}
+          />
+          <VariablesMetadataForm
+            metadata={config.connector.variables_metadata}
+            onChange={(newMetadata) => setConfig({
+              ...config,
+              connector: {
+                ...config.connector,
+                variables_metadata: newMetadata
+              }
+            })}
+          />
+          <StepForm
+            steps={config.steps}
+            onChange={(newSteps) => setConfig({ ...config, steps: newSteps })}
+          />
         </div>
+      </div>
 
-        {/* YAML Output Section */}
-        <div className="lg:w-1/2">
-          <div className="sticky top-4">
-            <div className="bg-white rounded-lg shadow-sm border p-4">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold">Generated YAML</h2>
-                <button
-                  onClick={handleCopyClick}
-                  className="flex items-center space-x-1 px-2 py-1 text-sm text-gray-600 hover:text-blue-600 transition-colors rounded-md hover:bg-blue-50"
-                  title="Copy to clipboard"
-                >
-                  {copySuccess ? (
-                    <>
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span>Copied!</span>
-                    </>
-                  ) : (
-                    <>
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                          d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                      </svg>
-                      <span>Copy</span>
-                    </>
-                  )}
-                </button>
-              </div>
-              <pre className="bg-white border rounded-lg p-4 overflow-auto max-h-[80vh] whitespace-pre-wrap font-mono text-sm">
-                {generatedYaml || 'No YAML generated yet'}
-              </pre>
+      <div className="lg:w-1/2">
+        <div className="sticky top-4">
+          <div className="yaml-container">
+            <div className="yaml-header">
+              <h2 className="text-lg font-semibold text-neutral-800">Generated YAML</h2>
+              <button
+                onClick={handleCopyClick}
+                className="btn btn-secondary flex items-center space-x-1"
+                title="Copy to clipboard"
+              >
+                {copySuccess ? (
+                  <>
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                        d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                    </svg>
+                    <span>Copy</span>
+                  </>
+                )}
+              </button>
             </div>
+            <pre className="yaml-content">
+              {generatedYaml || 'No YAML generated yet'}
+            </pre>
           </div>
         </div>
       </div>

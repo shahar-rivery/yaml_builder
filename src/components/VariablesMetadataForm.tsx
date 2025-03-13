@@ -7,128 +7,114 @@ interface VariablesMetadataFormProps {
 
 export function VariablesMetadataForm({ metadata, onChange }: VariablesMetadataFormProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [newVarName, setNewVarName] = useState('');
+  const [newKey, setNewKey] = useState('');
+  const [newValue, setNewValue] = useState('');
 
   const handleAddVariable = () => {
-    if (newVarName.trim()) {
-      onChange({
-        ...metadata,
-        [newVarName]: {
-          format: 'json',
-          storage_name: 'results dir'
-        }
-      });
-      setNewVarName('');
-    }
+    if (newKey.trim() === '') return;
+    
+    onChange({
+      ...metadata,
+      [newKey]: newValue
+    });
+    
+    setNewKey('');
+    setNewValue('');
   };
 
-  const handleRemoveVariable = (varName: string) => {
+  const handleRemoveVariable = (key: string) => {
     const newMetadata = { ...metadata };
-    delete newMetadata[varName];
+    delete newMetadata[key];
     onChange(newMetadata);
   };
 
-  const handleFormatChange = (varName: string, format: string) => {
-    onChange({
-      ...metadata,
-      [varName]: {
-        ...metadata[varName],
-        format
-      }
-    });
-  };
-
-  const handleStorageNameChange = (varName: string, storage_name: string) => {
-    onChange({
-      ...metadata,
-      [varName]: {
-        ...metadata[varName],
-        storage_name
-      }
-    });
-  };
-
   return (
-    <div className="border rounded-lg overflow-hidden bg-white shadow-sm">
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full p-2 bg-gray-50 flex justify-between items-center hover:bg-gray-100 transition-colors"
-      >
+    <div className="form-card">
+      <div className="form-header">
         <div className="flex items-center space-x-2">
-          <h2 className="text-sm font-medium">Variables Metadata</h2>
+          <h2>Variables Metadata</h2>
           {Object.keys(metadata).length > 0 && (
-            <span className="px-1.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+            <span className="badge badge-blue">
               {Object.keys(metadata).length}
             </span>
           )}
         </div>
-        <span className="transform transition-transform duration-200" style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
-          ▼
-        </span>
-      </button>
+        <button 
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="btn btn-icon btn-ghost"
+        >
+          <svg 
+            className={`h-4 w-4 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} 
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+      </div>
 
       {isExpanded && (
-        <div className="p-3">
+        <div className="form-content">
           {Object.keys(metadata).length === 0 ? (
             <div className="text-center py-3">
-              <p className="text-sm text-gray-500">No variables defined</p>
+              <p className="text-sm text-neutral-500">No variables added</p>
             </div>
           ) : (
-            <div className="space-y-2 mb-3">
-              {Object.entries(metadata).map(([varName, varData]) => (
-                <div key={varName} className="group relative p-2 border rounded-md bg-gray-50 hover:bg-gray-100 transition-colors text-sm">
-                  <div className="flex flex-col space-y-1">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium">{varName}</span>
-                      <button
-                        onClick={() => handleRemoveVariable(varName)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-gray-400 hover:text-red-500 rounded-full hover:bg-white"
-                      >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <select
-                          value={(varData as any).format || 'json'}
-                          onChange={(e) => handleFormatChange(varName, e.target.value)}
-                          className="w-full p-1 text-sm border rounded bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                          <option value="json">JSON</option>
-                          <option value="csv">CSV</option>
-                          <option value="xml">XML</option>
-                        </select>
-                      </div>
-                      <div>
-                        <input
-                          type="text"
-                          value={(varData as any).storage_name || 'results dir'}
-                          onChange={(e) => handleStorageNameChange(varName, e.target.value)}
-                          className="w-full p-1 text-sm border rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-                    </div>
+            <div className="space-y-2 mb-4">
+              {Object.entries(metadata).map(([key, value]) => (
+                <div key={key} className="parameter-card group flex justify-between items-center">
+                  <div className="flex-1">
+                    <div className="text-sm font-medium">{key}</div>
+                    <div className="text-xs text-neutral-500">{String(value)}</div>
                   </div>
+                  <button
+                    onClick={() => handleRemoveVariable(key)}
+                    className="remove-button btn btn-icon btn-ghost text-neutral-400 hover:text-red-500"
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
               ))}
             </div>
           )}
 
-          <div className="flex space-x-2">
-            <input
-              type="text"
-              value={newVarName}
-              onChange={(e) => setNewVarName(e.target.value)}
-              placeholder="Variable name"
-              className="flex-1 p-1 text-sm border rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-            />
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="form-label">Key</label>
+                <input
+                  type="text"
+                  value={newKey}
+                  onChange={(e) => setNewKey(e.target.value)}
+                  className="form-input"
+                  placeholder="Variable name"
+                />
+              </div>
+              <div>
+                <label className="form-label">Value</label>
+                <input
+                  type="text"
+                  value={newValue}
+                  onChange={(e) => setNewValue(e.target.value)}
+                  className="form-input"
+                  placeholder="Variable value"
+                />
+              </div>
+            </div>
+            
             <button
+              type="button"
               onClick={handleAddVariable}
-              className="px-2 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+              disabled={newKey.trim() === ''}
+              className={`add-button ${newKey.trim() === '' ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              Add
+              <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              <span>Add Variable</span>
             </button>
           </div>
         </div>
