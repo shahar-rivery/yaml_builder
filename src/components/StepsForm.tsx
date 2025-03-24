@@ -273,14 +273,6 @@ export const StepsForm: React.FC<Props> = ({ steps, onUpdate }) => {
           </div>
         </div>
       ))}
-
-      <button
-        onClick={addStep}
-        className="flex items-center justify-center w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-      >
-        <Plus size={20} className="mr-2" />
-        Add Step
-      </button>
     </div>
   );
 };
