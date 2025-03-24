@@ -1,72 +1,201 @@
 import React from 'react';
-import { InterfaceParameter } from '../types';
-import { Trash2 } from 'lucide-react';
+import { PlusCircle, Trash2 } from 'lucide-react';
 
-interface Props {
-  parameters: InterfaceParameter[];
-  onUpdate: (parameters: InterfaceParameter[]) => void;
+type AuthType = 'bearer' | 'basic_http' | 'api_key';
+type PeriodType = 'date' | 'datetime';
+
+interface Field {
+  name: string;
+  type?: string;
+  value?: string;
+  is_encrypted?: boolean;
 }
 
-export const InterfaceParametersForm: React.FC<Props> = ({ parameters, onUpdate }) => {
-  const handleParameterChange = (index: number, field: string, value: string) => {
-    const newParameters = [...parameters];
-    newParameters[index] = { ...newParameters[index], [field]: value };
-    onUpdate(newParameters);
-  };
+interface Parameter {
+  name: string;
+  type: string;
+  auth_type?: AuthType;
+  period_type?: PeriodType;
+  format?: string;
+  location?: 'header' | 'query_param';
+  fields?: Field[];
+}
 
+interface Props {
+  parameters: Parameter[];
+  onUpdate: (parameters: Parameter[]) => void;
+}
+
+export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
   const addParameter = () => {
-    onUpdate([...parameters, { name: '', type: 'string', value: '' }]);
+    onUpdate([...parameters, { name: '', type: 'string' }]);
   };
 
   const removeParameter = (index: number) => {
-    const newParameters = parameters.filter((_, i) => i !== index);
+    const newParameters = [...parameters];
+    newParameters.splice(index, 1);
+    onUpdate(newParameters);
+  };
+
+  const updateParameter = (index: number, field: string, value: any) => {
+    const newParameters = [...parameters];
+    newParameters[index] = { ...newParameters[index], [field]: value };
+
+    // Set default fields based on parameter type
+    if (field === 'type') {
+      if (value === 'authentication') {
+        newParameters[index].auth_type = 'bearer';
+        newParameters[index].fields = [
+          { name: 'bearer_token', type: 'string', is_encrypted: true }
+        ];
+      } else if (value === 'date_range') {
+        newParameters[index].period_type = 'date';
+        newParameters[index].format = 'YYYY-MM-DD';
+        newParameters[index].fields = [
+          { name: 'start_date', value: '' },
+          { name: 'end_date', value: '' }
+        ];
+      }
+    }
+
+    if (field === 'auth_type') {
+      switch (value) {
+        case 'bearer':
+          newParameters[index].fields = [
+            { name: 'bearer_token', type: 'string', is_encrypted: true }
+          ];
+          break;
+        case 'basic_http':
+          newParameters[index].fields = [
+            { name: 'username', type: 'string' },
+            { name: 'password', type: 'string', is_encrypted: true }
+          ];
+          break;
+        case 'api_key':
+          newParameters[index].location = 'header';
+          newParameters[index].fields = [
+            { name: 'key_name', type: 'string' },
+            { name: 'key_value', type: 'string', is_encrypted: true }
+          ];
+          break;
+      }
+    }
+
     onUpdate(newParameters);
   };
 
   return (
     <div className="space-y-4">
       {parameters.map((param, index) => (
-        <div key={index} className="flex gap-4 items-start">
-          <div className="flex-1 space-y-2">
-            <input
-              type="text"
-              placeholder="Parameter Name"
-              value={param.name}
-              onChange={(e) => handleParameterChange(index, 'name', e.target.value)}
-              className="w-full px-3 py-2 border rounded-md"
-            />
-            <select
-              value={param.type}
-              onChange={(e) => handleParameterChange(index, 'type', e.target.value)}
-              className="w-full px-3 py-2 border rounded-md"
+        <div key={index} className="space-y-4 p-4 border rounded-lg">
+          <div className="flex justify-between">
+            <div className="flex-grow space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <input
+                  type="text"
+                  placeholder="Parameter Name"
+                  value={param.name}
+                  onChange={(e) => updateParameter(index, 'name', e.target.value)}
+                  className="border rounded p-2"
+                />
+                <select
+                  value={param.type}
+                  onChange={(e) => updateParameter(index, 'type', e.target.value)}
+                  className="border rounded p-2"
+                >
+                  <option value="string">String</option>
+                  <option value="authentication">Authentication</option>
+                  <option value="date_range">Date Range</option>
+                </select>
+              </div>
+
+              {param.type === 'authentication' && (
+                <div className="space-y-4">
+                  <select
+                    value={param.auth_type}
+                    onChange={(e) => updateParameter(index, 'auth_type', e.target.value)}
+                    className="border rounded p-2 w-full"
+                  >
+                    <option value="bearer">Bearer Token</option>
+                    <option value="basic_http">Basic HTTP</option>
+                    <option value="api_key">API Key</option>
+                  </select>
+
+                  {param.auth_type === 'api_key' && (
+                    <select
+                      value={param.location}
+                      onChange={(e) => updateParameter(index, 'location', e.target.value)}
+                      className="border rounded p-2 w-full"
+                    >
+                      <option value="header">Header</option>
+                      <option value="query_param">Query Parameter</option>
+                    </select>
+                  )}
+                </div>
+              )}
+
+              {param.type === 'date_range' && (
+                <div className="space-y-4">
+                  <select
+                    value={param.period_type}
+                    onChange={(e) => updateParameter(index, 'period_type', e.target.value)}
+                    className="border rounded p-2 w-full"
+                  >
+                    <option value="date">Date</option>
+                    <option value="datetime">DateTime</option>
+                  </select>
+                  <input
+                    type="text"
+                    placeholder="Format"
+                    value={param.format}
+                    onChange={(e) => updateParameter(index, 'format', e.target.value)}
+                    className="border rounded p-2 w-full"
+                  />
+                </div>
+              )}
+
+              {param.fields && (
+                <div className="space-y-2">
+                  {param.fields.map((field, fieldIndex) => (
+                    <div key={fieldIndex} className="grid grid-cols-2 gap-4">
+                      <input
+                        type="text"
+                        value={field.name}
+                        readOnly
+                        className="border rounded p-2 bg-gray-100"
+                      />
+                      <input
+                        type={param.type === 'date_range' ? 'date' : 'text'}
+                        placeholder={`Enter ${field.name}`}
+                        value={field.value || ''}
+                        onChange={(e) => {
+                          const newFields = [...param.fields!];
+                          newFields[fieldIndex] = { ...field, value: e.target.value };
+                          updateParameter(index, 'fields', newFields);
+                        }}
+                        className="border rounded p-2"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <button
+              onClick={() => removeParameter(index)}
+              className="ml-4 text-red-500 hover:text-red-700"
             >
-              <option value="string">String</option>
-              <option value="authentication">Authentication</option>
-            </select>
-            {param.type === 'authentication' && (
-              <select
-                value={param.auth_type}
-                onChange={(e) => handleParameterChange(index, 'auth_type', e.target.value)}
-                className="w-full px-3 py-2 border rounded-md"
-              >
-                <option value="bearer">Bearer</option>
-              </select>
-            )}
+              <Trash2 size={20} />
+            </button>
           </div>
-          <button
-            onClick={() => removeParameter(index)}
-            className="p-2 text-red-500 hover:text-red-700"
-          >
-            <Trash2 size={20} />
-          </button>
         </div>
       ))}
       <button
         onClick={addParameter}
-        className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+        className="flex items-center text-blue-500 hover:text-blue-700"
       >
+        <PlusCircle size={20} className="mr-2" />
         Add Parameter
       </button>
     </div>
   );
-};
+}

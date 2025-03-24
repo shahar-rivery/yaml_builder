@@ -22,12 +22,45 @@ function App() {
           //   type: 'string'
           // },
           // {
-          //   name: 'Auth',
+          //   name: 'BearerAuth',
           //   type: 'authentication',
           //   auth_type: 'bearer',
           //   fields: [
           //     {
           //       name: 'bearer_token',
+          //       type: 'string',
+          //       is_encrypted: true
+          //     }
+          //   ]
+          // },
+          // {
+          //   name: 'BasicAuth',
+          //   type: 'authentication',
+          //   auth_type: 'basic_http',
+          //   fields: [
+          //     {
+          //       name: 'username',
+          //       type: 'string'
+          //     },
+          //     {
+          //       name: 'password',
+          //       type: 'string',
+          //       is_encrypted: true
+          //     }
+          //   ]
+          // },
+          // {
+          //   name: 'ApiKeyAuth',
+          //   type: 'authentication',
+          //   auth_type: 'api_key',
+          //   // location: 'header',
+          //   fields: [
+          //     {
+          //       name: 'key_name',
+          //       type: 'string'
+          //     },
+          //     {
+          //       name: 'key_value',
           //       type: 'string',
           //       is_encrypted: true
           //     }
