@@ -120,25 +120,57 @@ export const StepsForm: React.FC<Props> = ({ steps, onUpdate }) => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Step Name
+                <span className="ml-1 text-xs text-gray-500">
+                  (Unique identifier for this step)
+                </span>
+              </label>
               <input
                 type="text"
+                placeholder="e.g., Get Rivers"
                 value={step.name}
                 onChange={(e) => handleStepChange(stepIndex, 'name', e.target.value)}
                 className="w-full px-3 py-2 border rounded-md"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Description</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Description
+                <span className="ml-1 text-xs text-gray-500">
+                  (Brief explanation of what this step does)
+                </span>
+              </label>
               <input
                 type="text"
+                placeholder="e.g., Get rivers from environment"
                 value={step.description}
                 onChange={(e) => handleStepChange(stepIndex, 'description', e.target.value)}
                 className="w-full px-3 py-2 border rounded-md"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">HTTP Method</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Type
+                <span className="ml-1 text-xs text-gray-500">
+                  (API request type, usually 'rest')
+                </span>
+              </label>
+              <input
+                type="text"
+                placeholder="e.g., rest"
+                value={step.type}
+                onChange={(e) => handleStepChange(stepIndex, 'type', e.target.value)}
+                className="w-full px-3 py-2 border rounded-md"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                HTTP Method
+                <span className="ml-1 text-xs text-gray-500">
+                  (GET, POST, PUT, DELETE, etc.)
+                </span>
+              </label>
               <select
                 value={step.http_method}
                 onChange={(e) => handleStepChange(stepIndex, 'http_method', e.target.value)}
@@ -151,9 +183,15 @@ export const StepsForm: React.FC<Props> = ({ steps, onUpdate }) => {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Endpoint</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Endpoint
+                <span className="ml-1 text-xs text-gray-500">
+                  (API endpoint URL, can include variables like {'{account_id}'})
+                </span>
+              </label>
               <input
                 type="text"
+                placeholder="e.g., {{%BASE_URL%}}/v1/accounts/{account_id}/environments/{environment_id}/rivers"
                 value={step.endpoint}
                 onChange={(e) => handleStepChange(stepIndex, 'endpoint', e.target.value)}
                 className="w-full px-3 py-2 border rounded-md"

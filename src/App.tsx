@@ -119,6 +119,7 @@ function App() {
   });
 
   const [copied, setCopied] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
 
   const toggleSection = (section: keyof typeof expandedSections) => {
     setExpandedSections(prev => ({
@@ -148,7 +149,11 @@ function App() {
     try {
       await navigator.clipboard.writeText(yamlOutput);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setShowPopup(true);
+      setTimeout(() => {
+        setCopied(false);
+        setShowPopup(false);
+      }, 5000); // Hide after 5 seconds
     } catch (err) {
       console.error('Failed to copy text: ', err);
     }
@@ -157,7 +162,7 @@ function App() {
   const yamlOutput = dump(config);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 relative">
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center mb-8">
           <FileText size={32} className="text-blue-500 mr-3" />
@@ -166,24 +171,6 @@ function App() {
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="space-y-8">
-            <div className="bg-white rounded-lg shadow-md">
-              <button
-                onClick={() => toggleSection('parameters')}
-                className="w-full p-6 flex justify-between items-center text-left"
-              >
-                <h2 className="text-xl font-semibold">Interface Parameters</h2>
-                {expandedSections.parameters ? <ChevronUp /> : <ChevronDown />}
-              </button>
-              {expandedSections.parameters && (
-                <div className="p-6 pt-0">
-                  <InterfaceParametersForm
-                    parameters={config.interface_parameters.section.source}
-                    onUpdate={handleParametersUpdate}
-                  />
-                </div>
-              )}
-            </div>
-
             <div className="bg-white rounded-lg shadow-md">
               <button
                 onClick={() => toggleSection('connector')}
@@ -197,6 +184,24 @@ function App() {
                   <ConnectorForm
                     connector={config.connector}
                     onUpdate={handleConnectorUpdate}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="bg-white rounded-lg shadow-md">
+              <button
+                onClick={() => toggleSection('parameters')}
+                className="w-full p-6 flex justify-between items-center text-left"
+              >
+                <h2 className="text-xl font-semibold">Interface Parameters</h2>
+                {expandedSections.parameters ? <ChevronUp /> : <ChevronDown />}
+              </button>
+              {expandedSections.parameters && (
+                <div className="p-6 pt-0">
+                  <InterfaceParametersForm
+                    parameters={config.interface_parameters.section.source}
+                    onUpdate={handleParametersUpdate}
                   />
                 </div>
               )}
@@ -263,6 +268,25 @@ function App() {
           </div>
         </div>
       </div>
+
+      {showPopup && (
+        <div className="fixed bottom-4 right-4 bg-blue-600 text-white p-4 rounded-lg shadow-lg max-w-md animate-fade-in">
+          <div className="flex items-start">
+            <div className="flex-grow">
+              <h4 className="font-semibold mb-1">YAML Copied Successfully!</h4>
+              <p className="text-sm">
+                Return to the Blueprint editor and paste (Ctrl+V) the generated YAML to update your configuration.
+              </p>
+            </div>
+            <button 
+              onClick={() => setShowPopup(false)}
+              className="ml-4 text-white hover:text-blue-100"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

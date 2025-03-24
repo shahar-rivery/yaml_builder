@@ -49,22 +49,40 @@ export const ConnectorForm: React.FC<Props> = ({ connector, onUpdate }) => {
     <div className="space-y-6">
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-1">Connector Name</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Connector Name
+            <span className="ml-1 text-xs text-gray-500">
+              (The name of your API connector, e.g., 'Rivery API')
+            </span>
+          </label>
           <input
             type="text"
-            value={connector.name}
+            value={connector.name || ''}
             onChange={(e) => handleChange('name', e.target.value)}
+            placeholder="e.g., Rivery API"
             className="w-full px-3 py-2 border rounded-md"
           />
+          <p className="mt-1 text-xs text-gray-500">
+            This name will be used to identify your connector in the configuration.
+          </p>
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Base URL</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Base URL
+            <span className="ml-1 text-xs text-gray-500">
+              (The root URL for all API endpoints)
+            </span>
+          </label>
           <input
             type="text"
-            value={connector.base_url}
+            value={connector.base_url || ''}
             onChange={(e) => handleChange('base_url', e.target.value)}
+            placeholder="e.g., https://api.rivery.io"
             className="w-full px-3 py-2 border rounded-md"
           />
+          <p className="mt-1 text-xs text-gray-500">
+            All API endpoints will be relative to this base URL. Include the protocol (http:// or https://).
+          </p>
         </div>
       </div>
 
