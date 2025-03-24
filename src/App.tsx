@@ -6,7 +6,7 @@ import { YAMLConfig } from './types';
 import { InterfaceParametersForm } from './components/InterfaceParametersForm';
 import { ConnectorForm } from './components/ConnectorForm';
 import { StepsForm } from './components/StepsForm';
-import { FileText, ChevronDown, ChevronUp } from 'lucide-react';
+import { FileText, ChevronDown, ChevronUp, Copy, Check } from 'lucide-react';
 
 function App() {
   const [config, setConfig] = useState<YAMLConfig>({
@@ -72,6 +72,7 @@ function App() {
     connector: {
       name: '',
       base_url: '',
+      default_headers: {},
       variables_metadata: {
         // final_output_file: {
         //   format: 'json',
@@ -117,6 +118,8 @@ function App() {
     yaml: true
   });
 
+  const [copied, setCopied] = useState(false);
+
   const toggleSection = (section: keyof typeof expandedSections) => {
     setExpandedSections(prev => ({
       ...prev,
@@ -139,6 +142,16 @@ function App() {
 
   const handleStepsUpdate = (steps: any[]) => {
     setConfig({ ...config, steps });
+  };
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(yamlOutput);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
   };
 
   const yamlOutput = dump(config);
@@ -209,13 +222,33 @@ function App() {
           </div>
 
           <div className="bg-white rounded-lg shadow-md">
-            <button
-              onClick={() => toggleSection('yaml')}
-              className="w-full p-6 flex justify-between items-center text-left"
-            >
-              <h2 className="text-xl font-semibold">Generated YAML</h2>
-              {expandedSections.yaml ? <ChevronUp /> : <ChevronDown />}
-            </button>
+            <div className="p-6 flex justify-between items-center">
+              <button
+                onClick={() => toggleSection('yaml')}
+                className="flex-grow text-left flex items-center"
+              >
+                <h2 className="text-xl font-semibold">Generated YAML</h2>
+                {expandedSections.yaml ? <ChevronUp className="ml-2" /> : <ChevronDown className="ml-2" />}
+              </button>
+              {expandedSections.yaml && (
+                <button
+                  onClick={handleCopy}
+                  className="flex items-center px-3 py-1 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                >
+                  {copied ? (
+                    <>
+                      <Check size={16} className="mr-1 text-green-500" />
+                      <span className="text-green-500">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={16} className="mr-1" />
+                      <span>Copy</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
             {expandedSections.yaml && (
               <div className="p-6 pt-0">
                 <SyntaxHighlighter

@@ -72,7 +72,6 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
           ];
           break;
         case 'api_key':
-          newParameters[index].location = 'header';
           newParameters[index].fields = [
             { name: 'key_name', type: 'string' },
             { name: 'key_value', type: 'string', is_encrypted: true }
