@@ -242,7 +242,15 @@ function App() {
                   <section className="mb-8">
                     <h3 className="text-lg font-semibold mb-4">YAML Structure Overview</h3>
                     <p className="text-gray-600 mb-4">
-                      The YAML configuration consists of three main sections:
+                      The YAML configuration consists of three main sections. For complete documentation, please refer to the{' '}
+                      <a 
+                        href="https://docs.rivery.io/docs/blueprint" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 underline"
+                      >
+                        official Rivery Blueprint documentation
+                      </a>.
                     </p>
                     
                     <div className="space-y-6">
