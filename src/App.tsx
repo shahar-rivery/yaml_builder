@@ -170,119 +170,153 @@ function App() {
           <h1 className="text-3xl font-bold text-gray-900">YAML Builder</h1>
         </div>
         
+        <p className="text-gray-600 mb-8">
+          For complete documentation, please refer to the{' '}
+          <a 
+            href="https://docs.rivery.io/docs/blueprint" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 underline"
+          >
+            official Rivery Blueprint documentation
+          </a>.
+        </p>
+        
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="space-y-8">
-            <div className="bg-white rounded-lg shadow-md">
-              <button
-                onClick={() => toggleSection('connector')}
-                className="w-full p-6 flex justify-between items-center text-left"
-              >
-                <h2 className="text-xl font-semibold">Connector Configuration</h2>
-                {expandedSections.connector ? <ChevronUp /> : <ChevronDown />}
-              </button>
-              {expandedSections.connector && (
-                <div className="p-6 pt-0">
-                  <ConnectorForm
-                    connector={config.connector}
-                    onUpdate={handleConnectorUpdate}
-                  />
-                </div>
-              )}
-            </div>
-
-            <div className="bg-white rounded-lg shadow-md">
-              <button
-                onClick={() => toggleSection('parameters')}
-                className="w-full p-6 flex justify-between items-center text-left"
-              >
-                <h2 className="text-xl font-semibold">Interface Parameters</h2>
-                {expandedSections.parameters ? <ChevronUp /> : <ChevronDown />}
-              </button>
-              {expandedSections.parameters && (
-                <div className="p-6 pt-0">
-                  <InterfaceParametersForm
-                    parameters={config.interface_parameters.section.source}
-                    onUpdate={handleParametersUpdate}
-                  />
-                </div>
-              )}
-            </div>
-
-            <div className="bg-white rounded-lg shadow-md">
-              <button
-                onClick={() => toggleSection('steps')}
-                className="w-full p-6 flex justify-between items-center text-left"
-              >
-                <h2 className="text-xl font-semibold">Steps</h2>
-                {expandedSections.steps ? <ChevronUp /> : <ChevronDown />}
-              </button>
-              {expandedSections.steps && (
-                <div className="p-6 pt-0">
-                  <StepsForm
-                    steps={config.steps}
-                    onUpdate={handleStepsUpdate}
-                  />
-                </div>
-              )}
-            </div>
-
-            <div className="bg-white rounded-lg shadow-md">
-              <button
-                onClick={() => toggleSection('docs')}
-                className="w-full p-6 flex justify-between items-center text-left"
-              >
-                <div className="flex items-center">
-                  <HelpCircle size={20} className="mr-2 text-blue-500" />
-                  <h2 className="text-xl font-semibold">Documentation</h2>
-                </div>
-                {expandedSections.docs ? <ChevronUp /> : <ChevronDown />}
-              </button>
-              {expandedSections.docs && (
-                <div className="p-6 pt-0 prose max-w-none">
-                  <section className="mb-8">
-                    <h3 className="text-lg font-semibold mb-4">YAML Structure Overview</h3>
-                    <p className="text-gray-600 mb-4">
-                      The YAML configuration consists of three main sections. For complete documentation, please refer to the{' '}
-                      <a 
-                        href="https://docs.rivery.io/docs/blueprint" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 underline"
-                      >
-                        official Rivery Blueprint documentation
-                      </a>.
-                    </p>
-                    
-                    <div className="space-y-6">
-                      <div className="bg-gray-50 p-4 rounded-lg">
-                        <h4 className="font-semibold text-blue-600 mb-2">1. Connector Configuration</h4>
-                        <p className="text-sm text-gray-600 mb-2">
-                          Defines the basic settings for your API connection:
-                        </p>
-                        <pre className="bg-gray-100 p-3 rounded text-sm overflow-x-auto">
+            <div className="space-y-4">
+              <div className="bg-white rounded-lg shadow-md">
+                <button
+                  onClick={() => toggleSection('connector')}
+                  className="w-full p-6 flex justify-between items-center text-left"
+                >
+                  <h2 className="text-xl font-semibold">Connector Configuration</h2>
+                  {expandedSections.connector ? <ChevronUp /> : <ChevronDown />}
+                </button>
+                {expandedSections.connector && (
+                  <div className="p-6 pt-0 space-y-6">
+                    <ConnectorForm
+                      connector={config.connector}
+                      onUpdate={handleConnectorUpdate}
+                    />
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h4 className="font-semibold text-blue-600 mb-2">Connector Configuration Structure</h4>
+                      <p className="text-sm text-gray-600 mb-4">
+                        The Connector Configuration defines how your application connects to and interacts with the API. 
+                        It sets up the fundamental connection details and specifies how data should be handled:
+                      </p>
+                      <ul className="list-disc text-sm text-gray-600 ml-4 mb-4">
+                        <li className="mb-2">
+                          <strong>name & base_url:</strong> Define the basic connection details for your API
+                        </li>
+                        <li className="mb-4">
+                          <strong>variables_metadata:</strong> This is a crucial configuration that defines how your data will be handled:
+                          <ul className="list-circle ml-4 mt-2">
+                            <li className="mb-1">Determines the final destination of your processed data</li>
+                            <li className="mb-1">Specifies the format of the output (json, csv, etc.)</li>
+                            <li className="mb-1">Links to a storage configuration through storage_name</li>
+                            <li className="mb-1">The <code>final_output_file</code> is a special variable that the Blueprint engine uses to:</li>
+                            <ul className="list-dash ml-6 mt-1">
+                              <li>Create the schema for your data</li>
+                              <li>Prepare the data structure</li>
+                              <li>Determine where to save the processed data</li>
+                              <li>Handle data type conversions</li>
+                            </ul>
+                          </ul>
+                        </li>
+                        <li className="mb-4">
+                          <strong>variables_storages:</strong> Defines where and how your data can be stored:
+                          <ul className="list-circle ml-4 mt-2">
+                            <li className="mb-1">Each storage configuration must have a unique name</li>
+                            <li className="mb-1">The storage_name in variables_metadata must reference a defined storage</li>
+                            <li className="mb-1">Supports different storage types (file_system, s3, etc.)</li>
+                          </ul>
+                        </li>
+                      </ul>
+                      <pre className="bg-gray-100 p-3 rounded text-sm overflow-x-auto">
 {`connector:
   name: "Rivery API"              # Name of your API connector
   base_url: "https://api.example.com"  # Base URL for all endpoints
-  variables_metadata:             # Output configuration
-    final_output_file:
-      format: "json"             # Output format
-      storage_name: "results dir" # Storage reference
-  variables_storages:            # Storage definitions
-    - name: "results dir"        # Storage identifier
-      type: "file_system"        # Storage type`}
-                        </pre>
-                      </div>
-
-                      <div className="bg-gray-50 p-4 rounded-lg">
-                        <h4 className="font-semibold text-blue-600 mb-2">2. Interface Parameters</h4>
-                        <p className="text-sm text-gray-600 mb-2">
-                          Defines the input parameters and authentication required by the API to generate a Successfull request:
+  
+  # Variables metadata defines how data is processed and stored
+  variables_metadata:             
+    final_output_file:           # Special variable for data handling
+      format: "json"             # Format of the output data
+      storage_name: "results dir" # References a storage configuration
+  
+  # Storage configurations
+  variables_storages:            
+    - name: "results dir"        # Must match storage_name in metadata
+      type: "file_system"        # Storage type (file_system, s3, etc.)`}
+                      </pre>
+                      <div className="mt-4 bg-blue-50 p-3 rounded">
+                        <p className="text-sm text-blue-800">
+                          <strong>Important Note:</strong> The <code>final_output_file</code> variable is a key component that:
                         </p>
-                        <pre className="bg-gray-100 p-3 rounded text-sm overflow-x-auto">
+                        <ul className="list-disc text-sm text-blue-800 ml-4 mt-2">
+                          <li>Acts as a bridge between your API data and storage system</li>
+                          <li>Is referenced in step configurations to specify where data should be saved</li>
+                          <li>Enables the Blueprint engine to automatically handle data processing and storage</li>
+                          <li>Can be used across multiple steps to accumulate and process data</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-white rounded-lg shadow-md">
+                <button
+                  onClick={() => toggleSection('parameters')}
+                  className="w-full p-6 flex justify-between items-center text-left"
+                >
+                  <h2 className="text-xl font-semibold">Interface Parameters</h2>
+                  {expandedSections.parameters ? <ChevronUp /> : <ChevronDown />}
+                </button>
+                {expandedSections.parameters && (
+                  <div className="p-6 pt-0 space-y-6">
+                    <InterfaceParametersForm
+                      parameters={config.interface_parameters.section.source}
+                      onUpdate={handleParametersUpdate}
+                    />
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h4 className="font-semibold text-blue-600 mb-2">Interface Parameters Structure</h4>
+                      <p className="text-sm text-gray-600 mb-4">
+                        Interface Parameters are crucial variables that flow through your Blueprint steps. They serve as dynamic inputs 
+                        that can be used across different steps and influence how data is processed and stored:
+                      </p>
+                      <ul className="list-disc text-sm text-gray-600 ml-4 mb-4">
+                        <li className="mb-2">
+                          <strong>String Parameters:</strong> Simple text inputs that can be used in API endpoints or queries
+                        </li>
+                        <li className="mb-2">
+                          <strong>Authentication Parameters:</strong> Secure credentials for API access
+                          <ul className="list-circle ml-4 mt-1">
+                            <li>Bearer Token: For token-based authentication</li>
+                            <li>Basic HTTP: For username/password authentication</li>
+                            <li>API Key: For key-based authentication in headers or query parameters</li>
+                          </ul>
+                        </li>
+                        <li className="mb-2">
+                          <strong>Date Range Parameters:</strong> Time-based filters for data queries
+                        </li>
+                      </ul>
+                      <p className="text-sm text-gray-600 mb-4">
+                        <strong>Key Concept:</strong> These parameters are used throughout your Blueprint to:
+                      </p>
+                      <ul className="list-disc text-sm text-gray-600 ml-4 mb-4">
+                        <li className="mb-2">Build dynamic API endpoints (e.g., <code>/api/v1/accounts/{'{account_id}'}</code>)</li>
+                        <li className="mb-2">Pass authentication credentials securely</li>
+                        <li className="mb-2">Filter data based on date ranges</li>
+                        <li className="mb-2">Control where and how data is stored (using <code>final_output_file</code>)</li>
+                      </ul>
+                      <pre className="bg-gray-100 p-3 rounded text-sm overflow-x-auto">
 {`interface_parameters:
   section:
     source:
-      - name: "account_id"        # String parameter
+      - name: "account_id"        # Used in API endpoints
         type: "string"
       - name: "Auth"             # Authentication parameter
         type: "authentication"
@@ -291,22 +325,61 @@ function App() {
           - name: "bearer_token"
             type: "string"
             is_encrypted: true
-      - name: "time_period"      # Date range parameter
+      - name: "time_period"      # Date range for filtering
         type: "date_range"
         period_type: "date"      # date or datetime
         format: "YYYY-MM-DD"
         fields:
           - name: "start_date"
           - name: "end_date"`}
-                        </pre>
-                      </div>
+                      </pre>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
 
-                      <div className="bg-gray-50 p-4 rounded-lg">
-                        <h4 className="font-semibold text-blue-600 mb-2">3. Steps Configuration</h4>
-                        <p className="text-sm text-gray-600 mb-2">
-                          Defines the API endpoints and data processing:
-                        </p>
-                        <pre className="bg-gray-100 p-3 rounded text-sm overflow-x-auto">
+            <div className="space-y-4">
+              <div className="bg-white rounded-lg shadow-md">
+                <button
+                  onClick={() => toggleSection('steps')}
+                  className="w-full p-6 flex justify-between items-center text-left"
+                >
+                  <h2 className="text-xl font-semibold">Steps</h2>
+                  {expandedSections.steps ? <ChevronUp /> : <ChevronDown />}
+                </button>
+                {expandedSections.steps && (
+                  <div className="p-6 pt-0 space-y-6">
+                    <StepsForm
+                      steps={config.steps}
+                      onUpdate={handleStepsUpdate}
+                    />
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h4 className="font-semibold text-blue-600 mb-2">Steps Configuration Structure</h4>
+                      <p className="text-sm text-gray-600 mb-4">
+                        Steps define the sequence of API calls and data transformations in your Blueprint. Each step represents 
+                        an action that interacts with the API and processes the response:
+                      </p>
+                      <ul className="list-disc text-sm text-gray-600 ml-4 mb-4">
+                        <li className="mb-2">
+                          <strong>Step Configuration:</strong> Defines how to interact with the API
+                          <ul className="list-circle ml-4 mt-1">
+                            <li>name & description: For identification and documentation</li>
+                            <li>type: Usually 'rest' for REST API calls</li>
+                            <li>http_method: The HTTP method to use (GET, POST, etc.)</li>
+                            <li>endpoint: The API endpoint to call, can use parameter variables</li>
+                          </ul>
+                        </li>
+                        <li className="mb-2">
+                          <strong>Variables Output:</strong> Controls how response data is processed
+                          <ul className="list-circle ml-4 mt-1">
+                            <li>response_location: Where to find data in the response</li>
+                            <li>variable_name: How to reference the output</li>
+                            <li>variable_format: How to format the data</li>
+                          </ul>
+                        </li>
+                      </ul>
+                      <pre className="bg-gray-100 p-3 rounded text-sm overflow-x-auto">
 {`steps:
   - name: "Get Data"             # Step identifier
     description: "Fetch data"    # Step description
@@ -315,53 +388,13 @@ function App() {
     endpoint: "/api/v1/data"    # API endpoint
     variables_output:           # Output configuration
       - response_location: "data"
-        variable_name: "final_output_file"
+        variable_name: "final_output_file"  # References storage config
         variable_format: "json"`}
-                        </pre>
-                      </div>
+                      </pre>
                     </div>
-                  </section>
-
-                  <section className="mb-8">
-                    <h3 className="text-lg font-semibold mb-4">Form Components Guide</h3>
-                    
-                    <div className="space-y-4">
-                      <div>
-                        <h4 className="font-semibold text-blue-600">Connector Configuration</h4>
-                        <ul className="list-disc pl-5 text-sm text-gray-600">
-                          <li>Configure the basic API connection settings</li>
-                          <li>Set up output file format and storage locations</li>
-                          <li>Define storage types for your data</li>
-                        </ul>
-                      </div>
-
-                      <div>
-                        <h4 className="font-semibold text-blue-600">Interface Parameters</h4>
-                        <ul className="list-disc pl-5 text-sm text-gray-600">
-                          <li>String parameters: Simple text inputs</li>
-                          <li>Authentication:
-                            <ul className="list-circle pl-5">
-                              <li>Bearer Token: Single token authentication</li>
-                              <li>Basic HTTP: Username/password authentication</li>
-                              <li>API Key: Key-based authentication in headers or query params</li>
-                            </ul>
-                          </li>
-                          <li>Date Range: Configure date-based parameters with specific formats</li>
-                        </ul>
-                      </div>
-
-                      <div>
-                        <h4 className="font-semibold text-blue-600">Steps</h4>
-                        <ul className="list-disc pl-5 text-sm text-gray-600">
-                          <li>Define API endpoints and methods</li>
-                          <li>Configure how response data should be processed</li>
-                          <li>Set up output variable mapping</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </section>
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
