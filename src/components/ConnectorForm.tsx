@@ -62,9 +62,9 @@ export const ConnectorForm: React.FC<Props> = ({ connector, onUpdate }) => {
             placeholder="e.g., Rivery API"
             className="w-full px-3 py-2 border border-gray-200 rounded-md shadow-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
           />
-          <p className="mt-1 text-xs text-gray-500">
+          {/* <p className="mt-1 text-xs text-gray-500">
             This name will be used to identify your connector in the configuration.
-          </p>
+          </p> */}
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -80,14 +80,15 @@ export const ConnectorForm: React.FC<Props> = ({ connector, onUpdate }) => {
             placeholder="e.g., https://api.rivery.io"
             className="w-full px-3 py-2 border border-gray-200 rounded-md shadow-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
           />
-          <p className="mt-1 text-xs text-gray-500">
+          {/* <p className="mt-1 text-xs text-gray-500">
             All API endpoints will be relative to this base URL. Include the protocol (http:// or https://).
-          </p>
+          </p> */}
         </div>
       </div>
 
       <div className="border-t pt-6">
-        <h3 className="text-lg font-medium mb-4">Variables Metadata</h3>
+        <h3 className="text-lg font-medium mb-2">Variables Metadata</h3>
+        <p className="text-sm text-gray-600 mb-4">Configure how your pipeline variables are formatted and stored. These settings determine how data is processed and where it's saved.</p>
         <div className="space-y-4">
           {Object.entries(connector.variables_metadata).map(([varName, config]) => (
             <div key={varName} className="flex items-center gap-4 p-4 bg-gray-50 rounded-md">
@@ -106,8 +107,8 @@ export const ConnectorForm: React.FC<Props> = ({ connector, onUpdate }) => {
             </div>
           ))}
 
-          <div className="grid grid-cols-3 gap-1 items-end">
-            <div className="w-4/5">
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
               <input
                 type="text"
                 placeholder="Variable Name"
@@ -116,30 +117,17 @@ export const ConnectorForm: React.FC<Props> = ({ connector, onUpdate }) => {
                 className="w-full px-3 py-2 border border-gray-200 rounded-md shadow-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
               />
             </div>
-            <div className="w-4/5">
-              <input
-                type="text"
-                value="json"
-                disabled
-                className="w-full px-3 py-2 border border-gray-200 rounded-md shadow-sm outline-none bg-gray-50 text-gray-600 cursor-not-allowed"
-              />
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="w-4/5">
-                <input
-                  type="text"
-                  value="results dir"
-                  disabled
-                  className="w-full px-3 py-2 border border-gray-200 rounded-md shadow-sm outline-none bg-gray-50 text-gray-600 cursor-not-allowed"
-                />
-              </div>
-              <button
-                onClick={addVariable}
-                className="p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors shadow-sm hover:shadow-md flex-shrink-0"
-              >
-                <Plus size={16} />
-              </button>
-            </div>
+            <button
+              onClick={addVariable}
+              disabled={!newVarName.trim()}
+              className={`px-4 py-2 rounded-md transition-colors shadow-sm ${
+                !newVarName.trim()
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-blue-500 text-white hover:bg-blue-600 hover:shadow-md'
+              }`}
+            >
+              + Add Variable
+            </button>
           </div>
         </div>
       </div>

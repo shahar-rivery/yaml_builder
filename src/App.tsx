@@ -187,7 +187,12 @@ function App() {
             <h1 className="text-3xl font-bold text-gray-900">YAML Builder</h1>
           </div>
         </div>
-        
+        <p className="text-gray-600 mb-8">
+          This YAML Builder is designed to help you create and configure your data pipeline without needing to write YAML code manually. 
+          It provides a user-friendly interface where you can define your API connections, input parameters, and data processing steps. 
+          As you make changes in the interface, the YAML configuration is automatically generated and displayed in the right panel. 
+          You can then copy this YAML and use it in your Rivery Blueprint.
+        </p>
         <p className="text-gray-600 mb-8">
           For complete documentation, please refer to the{' '}
           <a 
@@ -199,6 +204,7 @@ function App() {
             official Rivery Blueprint documentation
           </a>.
         </p>
+       
         
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           <div className="space-y-8 lg:col-span-3">
@@ -222,7 +228,7 @@ function App() {
                         onClick={() => toggleDocs('connector')}
                         className="w-full flex justify-between items-center text-left mb-2"
                       >
-                        <h4 className="font-semibold text-blue-600">Connector Configuration</h4>
+                        <h4 className="font-semibold text-blue-600">Defining the Connector: API Setup & Data Handling                        </h4>
                         {expandedDocs.connector ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                       </button>
                       {expandedDocs.connector && (
@@ -307,6 +313,7 @@ function App() {
                 </button>
                 {expandedSections.parameters && (
                   <div className="p-6 pt-0 space-y-6">
+                    <p className="text-sm text-gray-600 mb-4">Define the input parameters for your pipeline. These parameters can be used for authentication, filtering data, and customizing API requests.</p>
                     <InterfaceParametersForm
                       parameters={config.interface_parameters.section.source}
                       onUpdate={handleParametersUpdate}
@@ -316,7 +323,7 @@ function App() {
                         onClick={() => toggleDocs('parameters')}
                         className="w-full flex justify-between items-center text-left mb-2"
                       >
-                        <h4 className="font-semibold text-blue-600">Interface Parameters</h4>
+                        <h4 className="font-semibold text-blue-600">Defining Dynamic Inputs: Interface Parameters</h4>
                         {expandedDocs.parameters ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                       </button>
                       {expandedDocs.parameters && (
@@ -410,7 +417,7 @@ function App() {
                         onClick={() => toggleDocs('steps')}
                         className="w-full flex justify-between items-center text-left mb-2"
                       >
-                        <h4 className="font-semibold text-blue-600">Steps Configuration</h4>
+                        <h4 className="font-semibold text-blue-600">Building the Flow: Step Configuration Explained</h4>
                         {expandedDocs.steps ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                       </button>
                       {expandedDocs.steps && (
