@@ -1,8 +1,10 @@
+import { AuthType } from './components/InterfaceParametersForm';
+
 export interface InterfaceParameter {
   name: string;
   type: string;
   value: string;
-  auth_type?: string;
+  auth_type?: AuthType;
   fields?: InterfaceParameter[];
   is_encrypted?: boolean;
 }

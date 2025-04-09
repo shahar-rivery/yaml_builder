@@ -112,11 +112,11 @@ function App() {
   });
 
   const [expandedSections, setExpandedSections] = useState({
-    parameters: false,
-    connector: false,
-    steps: false,
+    parameters: true,
+    connector: true,
+    steps: true,
     yaml: true,
-    docs: false
+    docs: true
   });
 
   const [expandedDocs, setExpandedDocs] = useState({
@@ -138,7 +138,7 @@ function App() {
     }));
   };
 
-  const toggleDocs = (section: string) => {
+  const toggleDocs = (section: keyof typeof expandedDocs) => {
     setExpandedDocs(prev => ({
       ...prev,
       [section]: !prev[section]
@@ -181,9 +181,11 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50 relative">
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center mb-8">
-          <FileText size={32} className="text-blue-500 mr-3" />
-          <h1 className="text-3xl font-bold text-gray-900">YAML Builder</h1>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center">
+            <FileText size={32} className="text-blue-500 mr-3" />
+            <h1 className="text-3xl font-bold text-gray-900">YAML Builder</h1>
+          </div>
         </div>
         
         <p className="text-gray-600 mb-8">
@@ -198,10 +200,10 @@ function App() {
           </a>.
         </p>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="space-y-8">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+          <div className="space-y-8 lg:col-span-3">
             <div className="space-y-4">
-              <div className="bg-white rounded-lg shadow-md">
+              <div className="bg-white rounded-lg shadow-lg">
                 <button
                   onClick={() => toggleSection('connector')}
                   className="w-full p-6 flex justify-between items-center text-left"
@@ -215,7 +217,7 @@ function App() {
                       connector={config.connector}
                       onUpdate={handleConnectorUpdate}
                     />
-                    <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="bg-gray-50 p-4 rounded-lg shadow-md">
                       <button
                         onClick={() => toggleDocs('connector')}
                         className="w-full flex justify-between items-center text-left mb-2"
@@ -295,7 +297,7 @@ function App() {
             </div>
 
             <div className="space-y-4">
-              <div className="bg-white rounded-lg shadow-md">
+              <div className="bg-white rounded-lg shadow-lg">
                 <button
                   onClick={() => toggleSection('parameters')}
                   className="w-full p-6 flex justify-between items-center text-left"
@@ -309,7 +311,7 @@ function App() {
                       parameters={config.interface_parameters.section.source}
                       onUpdate={handleParametersUpdate}
                     />
-                    <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="bg-gray-50 p-4 rounded-lg shadow-md">
                       <button
                         onClick={() => toggleDocs('parameters')}
                         className="w-full flex justify-between items-center text-left mb-2"
@@ -389,7 +391,7 @@ function App() {
             </div>
 
             <div className="space-y-4">
-              <div className="bg-white rounded-lg shadow-md">
+              <div className="bg-white rounded-lg shadow-lg">
                 <button
                   onClick={() => toggleSection('steps')}
                   className="w-full p-6 flex justify-between items-center text-left"
@@ -403,7 +405,7 @@ function App() {
                       steps={config.steps}
                       onUpdate={handleStepsUpdate}
                     />
-                    <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="bg-gray-50 p-4 rounded-lg shadow-md">
                       <button
                         onClick={() => toggleDocs('steps')}
                         className="w-full flex justify-between items-center text-left mb-2"
@@ -487,7 +489,7 @@ function App() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md">
+          <div className="bg-white rounded-lg shadow-lg col-span-2">
             <div className="p-6 flex justify-between items-center">
               <button
                 onClick={() => toggleSection('yaml')}
@@ -497,22 +499,24 @@ function App() {
                 {expandedSections.yaml ? <ChevronUp className="ml-2" /> : <ChevronDown className="ml-2" />}
               </button>
               {expandedSections.yaml && (
-                <button
-                  onClick={handleCopy}
-                  className="flex items-center px-3 py-1 text-sm text-gray-600 hover:text-gray-800 transition-colors"
-                >
-                  {copied ? (
-                    <>
-                      <Check size={16} className="mr-1 text-green-500" />
-                      <span className="text-green-500">Copied!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy size={16} className="mr-1" />
-                      <span>Copy</span>
-                    </>
-                  )}
-                </button>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={handleCopy}
+                    className="flex items-center px-3 py-1 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                  >
+                    {copied ? (
+                      <>
+                        <Check size={16} className="mr-1 text-green-500" />
+                        <span className="text-green-500">Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy size={16} className="mr-1" />
+                        <span>Copy</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               )}
             </div>
             {expandedSections.yaml && (

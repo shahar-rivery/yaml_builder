@@ -32,7 +32,7 @@ export const LoopComponent: React.FC<LoopComponentProps> = ({
         </div>
       </div>
       
-      <div className="space-y-4">
+      <div className="space-y-4 p-4 bg-white rounded-lg shadow-md">
         {/* Loop Type */}
         <div className="flex items-center">
           <label className="w-32 text-sm text-gray-700">Loop Type</label>
@@ -41,7 +41,7 @@ export const LoopComponent: React.FC<LoopComponentProps> = ({
               type="text"
               value="data"
               disabled
-              className="w-20 px-2 py-1 border rounded bg-gray-50 text-gray-700 text-sm"
+              className="w-20 px-2 py-1 border border-gray-200 rounded bg-gray-50 text-gray-700 text-sm shadow-sm"
             />
             <span className="ml-2 text-sm text-gray-500">array data</span>
           </div>
@@ -53,7 +53,7 @@ export const LoopComponent: React.FC<LoopComponentProps> = ({
           <div className="flex-1">
             <input
               type="text"
-              className="w-full px-2 py-1 border rounded focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+              className="w-full px-2 py-1 border border-gray-200 rounded focus:ring-1 focus:ring-indigo-500 shadow-sm outline-none"
               value={loop.variable_name}
               onChange={(e) => handleLoopChange('variable_name', e.target.value)}
               placeholder="e.g., post_ids"
@@ -70,7 +70,7 @@ export const LoopComponent: React.FC<LoopComponentProps> = ({
           <div className="flex-1">
             <input
               type="text"
-              className="w-full px-2 py-1 border rounded focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+              className="w-full px-2 py-1 border border-gray-200 rounded focus:ring-1 focus:ring-indigo-500 shadow-sm outline-none"
               value={loop.item_name}
               onChange={(e) => handleLoopChange('item_name', e.target.value)}
               placeholder="e.g., post_id"
@@ -88,7 +88,7 @@ export const LoopComponent: React.FC<LoopComponentProps> = ({
             <label className="flex items-center">
               <input
                 type="checkbox"
-                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                className="h-4 w-4 rounded shadow-sm text-indigo-600 focus:ring-indigo-500"
                 checked={loop.add_to_results}
                 onChange={(e) => handleLoopChange('add_to_results', e.target.checked)}
               />
@@ -101,14 +101,14 @@ export const LoopComponent: React.FC<LoopComponentProps> = ({
         </div>
       </div>
 
-      <div className="text-xs text-blue-700 border-t pt-2">
+      <div className="text-xs text-blue-700 pt-2 bg-blue-50 p-3 rounded-lg shadow-sm">
         <span className="font-medium mr-1">Example:</span>
         <span>Variable: </span>
-        <code className="bg-blue-50 px-1 rounded mx-1">post_ids</code>
+        <code className="bg-blue-100 px-1 rounded mx-1 shadow-sm">post_ids</code>
         <span>Item: </span>
-        <code className="bg-blue-50 px-1 rounded mx-1">post_id</code>
+        <code className="bg-blue-100 px-1 rounded mx-1 shadow-sm">post_id</code>
         <span>Use: </span>
-        <code className="bg-blue-50 px-1 rounded mx-1">{'{{%post_id%}}'}</code>
+        <code className="bg-blue-100 px-1 rounded mx-1 shadow-sm">{'{{%post_id%}}'}</code>
       </div>
     </div>
   );

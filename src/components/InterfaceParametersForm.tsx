@@ -1,8 +1,8 @@
 import React from 'react';
 import { PlusCircle, Trash2 } from 'lucide-react';
 
-type AuthType = 'bearer' | 'basic_http' | 'api_key';
-type PeriodType = 'date' | 'datetime';
+export type AuthType = 'bearer' | 'basic_http' | 'api_key';
+export type PeriodType = 'date' | 'datetime';
 
 interface Field {
   name: string;

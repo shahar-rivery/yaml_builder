@@ -60,7 +60,7 @@ export const ConnectorForm: React.FC<Props> = ({ connector, onUpdate }) => {
             value={connector.name || ''}
             onChange={(e) => handleChange('name', e.target.value)}
             placeholder="e.g., Rivery API"
-            className="w-full px-3 py-2 border rounded-md"
+            className="w-full px-3 py-2 border border-gray-200 rounded-md shadow-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
           />
           <p className="mt-1 text-xs text-gray-500">
             This name will be used to identify your connector in the configuration.
@@ -78,7 +78,7 @@ export const ConnectorForm: React.FC<Props> = ({ connector, onUpdate }) => {
             value={connector.base_url || ''}
             onChange={(e) => handleChange('base_url', e.target.value)}
             placeholder="e.g., https://api.rivery.io"
-            className="w-full px-3 py-2 border rounded-md"
+            className="w-full px-3 py-2 border border-gray-200 rounded-md shadow-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
           />
           <p className="mt-1 text-xs text-gray-500">
             All API endpoints will be relative to this base URL. Include the protocol (http:// or https://).
@@ -106,38 +106,41 @@ export const ConnectorForm: React.FC<Props> = ({ connector, onUpdate }) => {
             </div>
           ))}
 
-          <div className="grid grid-cols-3 gap-4">
-            <input
-              type="text"
-              placeholder="Variable Name"
-              value={newVarName}
-              onChange={(e) => setNewVarName(e.target.value)}
-              className="px-3 py-2 border rounded-md"
-            />
-            <select
-              value={newVarFormat}
-              onChange={(e) => setNewVarFormat(e.target.value)}
-              className="px-3 py-2 border rounded-md"
-            >
-              <option value="json">JSON</option>
-              <option value="csv">CSV</option>
-              <option value="text">Text</option>
-            </select>
-            <input
-              type="text"
-              placeholder="Storage Name"
-              value={newVarStorage}
-              onChange={(e) => setNewVarStorage(e.target.value)}
-              className="px-3 py-2 border rounded-md"
-            />
+          <div className="grid grid-cols-3 gap-1 items-end">
+            <div className="w-4/5">
+              <input
+                type="text"
+                placeholder="Variable Name"
+                value={newVarName}
+                onChange={(e) => setNewVarName(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-md shadow-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+              />
+            </div>
+            <div className="w-4/5">
+              <input
+                type="text"
+                value="json"
+                disabled
+                className="w-full px-3 py-2 border border-gray-200 rounded-md shadow-sm outline-none bg-gray-50 text-gray-600 cursor-not-allowed"
+              />
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="w-4/5">
+                <input
+                  type="text"
+                  value="results dir"
+                  disabled
+                  className="w-full px-3 py-2 border border-gray-200 rounded-md shadow-sm outline-none bg-gray-50 text-gray-600 cursor-not-allowed"
+                />
+              </div>
+              <button
+                onClick={addVariable}
+                className="p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors shadow-sm hover:shadow-md flex-shrink-0"
+              >
+                <Plus size={16} />
+              </button>
+            </div>
           </div>
-          <button
-            onClick={addVariable}
-            className="flex items-center justify-center w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-          >
-            <Plus size={20} className="mr-2" />
-            Add Variable
-          </button>
         </div>
       </div>
     </div>

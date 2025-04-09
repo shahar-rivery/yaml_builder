@@ -41,8 +41,59 @@ const StepContent: React.FC<{
   removeTransformationLayer,
   removeStep,
 }) => {
+  const addNestedStep = (stepIndex: number) => {
+    const newSteps = [...parentSteps];
+    if (!newSteps[stepIndex]) return;
+    
+    if (!newSteps[stepIndex].steps) {
+      newSteps[stepIndex].steps = [];
+    }
+    
+    newSteps[stepIndex].steps.push({
+      name: '',
+      description: '',
+      type: 'rest',
+      http_method: 'GET',
+      endpoint: '',
+      variables_output: [{
+        response_location: 'data',
+        variable_name: '',
+        variable_format: 'json',
+        transformation_layers: [{
+          type: 'extract_json',
+          from_type: 'json',
+          json_path: ''
+        }]
+      }]
+    });
+    onUpdate(newSteps);
+  };
+
+  const addNestedLoopStep = (stepIndex: number) => {
+    const newSteps = [...parentSteps];
+    if (!newSteps[stepIndex]) return;
+    
+    if (!newSteps[stepIndex].steps) {
+      newSteps[stepIndex].steps = [];
+    }
+    
+    newSteps[stepIndex].steps.push({
+      name: '',
+      description: '',
+      type: 'loop',
+      loop: {
+        type: 'data',
+        variable_name: '',
+        item_name: '',
+        add_to_results: true
+      },
+      steps: []
+    });
+    onUpdate(newSteps);
+  };
+
   return (
-    <div className="p-4 border rounded-lg space-y-4">
+    <div className="p-4 shadow-md rounded-lg space-y-4 w-full bg-white">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Step {stepIndex + 1}</h3>
         <button
@@ -53,7 +104,7 @@ const StepContent: React.FC<{
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4 w-full">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Step Name
@@ -64,7 +115,7 @@ const StepContent: React.FC<{
             placeholder="e.g., Get Posts"
             value={step.name}
             onChange={(e) => handleStepChange(stepIndex, 'name', e.target.value)}
-            className="w-full px-3 py-2 border rounded-md"
+            className="w-full px-3 py-2 border border-gray-200 rounded-md shadow-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
           />
         </div>
         <div>
@@ -77,22 +128,20 @@ const StepContent: React.FC<{
             placeholder="e.g., Get posts from API"
             value={step.description}
             onChange={(e) => handleStepChange(stepIndex, 'description', e.target.value)}
-            className="w-full px-3 py-2 border rounded-md"
+            className="w-full px-3 py-2 border border-gray-200 rounded-md shadow-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
           />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Type
-            <span className="ml-1 text-xs text-gray-500">(Type of step - REST or Loop)</span>
+            <span className="ml-1 text-xs text-gray-500">(REST API step)</span>
           </label>
-          <select
-            value={step.type}
-            onChange={(e) => handleStepChange(stepIndex, 'type', e.target.value)}
-            className="w-full px-3 py-2 border rounded-md"
-          >
-            <option value="rest">REST</option>
-            <option value="loop">Loop</option>
-          </select>
+          <input
+            type="text"
+            value="rest"
+            disabled
+            className="w-full px-3 py-2 border border-gray-200 rounded-md shadow-sm outline-none bg-gray-50 text-gray-600 cursor-not-allowed"
+          />
         </div>
 
         {step.type === 'loop' && step.loop && (
@@ -149,7 +198,7 @@ const StepContent: React.FC<{
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 HTTP Method
-                <span className="ml-1 text-xs text-gray-500">(The HTTP method to use for the request)</span>
+                <span className="ml-1 text-xs text-gray-500">(HTTP method to use for the request)</span>
               </label>
               <input
                 type="text"
@@ -186,7 +235,7 @@ const StepContent: React.FC<{
               </div>
 
               {(step.variables_output || []).map((output, outputIndex) => (
-                <div key={outputIndex} className="mb-4 p-4 border rounded">
+                <div key={outputIndex} className="mb-4 p-4 rounded-lg shadow-md bg-white">
                   <div className="flex justify-between items-start mb-4">
                     <h5 className="text-sm font-medium">Output {outputIndex + 1}</h5>
                     <button
@@ -201,13 +250,13 @@ const StepContent: React.FC<{
                     <div>
                       <label className="block text-sm font-medium mb-1">
                         Response Location
-                        <span className="ml-1 text-xs text-gray-500">(Where to find the data in the response, e.g., 'data' or 'items')</span>
+                        <span className="ml-1 text-xs text-gray-500">(Where to find the data in the response)</span>
                       </label>
                       <input
                         type="text"
                         value={output.response_location}
                         onChange={(e) => handleVariableOutputChange(stepIndex, outputIndex, 'response_location', e.target.value)}
-                        className="w-full px-3 py-2 border rounded-md"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-md shadow-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
                       />
                     </div>
                     <div>
@@ -219,7 +268,7 @@ const StepContent: React.FC<{
                         type="text"
                         value={output.variable_name}
                         onChange={(e) => handleVariableOutputChange(stepIndex, outputIndex, 'variable_name', e.target.value)}
-                        className="w-full px-3 py-2 border rounded-md"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-md shadow-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
                       />
                     </div>
                   </div>
@@ -282,6 +331,49 @@ const StepContent: React.FC<{
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* Add nested steps section */}
+            <div className="mt-2 col-span-2 w-full">
+              <div className="bg-gray-50 p-3 rounded-lg shadow-md">
+                <div className="flex justify-between items-center mb-4">
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900">Nested Steps</h4>
+                    <p className="text-sm text-gray-600 mt-1">Add Loop steps that will be executed in sequence</p>
+                  </div>
+                  <div>
+                    <button
+                      onClick={() => addNestedLoopStep(stepIndex)}
+                      className="flex items-center px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors shadow-sm hover:shadow-md"
+                    >
+                      <Plus size={18} className="mr-1" />
+                      Add Loop Step
+                    </button>
+                  </div>
+                </div>
+                
+                {step.steps && step.steps.length > 0 ? (
+                  <div className="space-y-2">
+                    <StepsForm
+                      steps={step.steps}
+                      onUpdate={(updatedSteps) => {
+                        const newSteps = [...parentSteps];
+                        newSteps[stepIndex] = {
+                          ...newSteps[stepIndex],
+                          steps: updatedSteps
+                        };
+                        onUpdate(newSteps);
+                      }}
+                      isNested={true}
+                    />
+                  </div>
+                ) : (
+                  <div className="text-center py-6 bg-gray-50 rounded-lg shadow-inner">
+                    <p className="text-gray-500">No nested steps added yet</p>
+                    <p className="text-sm text-gray-400 mt-1">Click the button above to add a step</p>
+                  </div>
+                )}
+              </div>
             </div>
           </>
         )}
@@ -388,41 +480,6 @@ export const StepsForm: React.FC<Props> = ({ steps, onUpdate, isNested = false }
     onUpdate(newSteps);
   };
 
-  const addStep = () => {
-    onUpdate([...steps, {
-      name: '',
-      description: '',
-      type: 'rest',
-      http_method: 'GET',
-      endpoint: '',
-      variables_output: [{
-        response_location: 'data',
-        variable_name: '',
-        variable_format: 'json',
-        transformation_layers: [{
-          type: 'extract_json',
-          from_type: 'json',
-          json_path: ''
-        }]
-      }]
-    }]);
-  };
-
-  const addLoopStep = () => {
-    onUpdate([...steps, {
-      name: '',
-      description: '',
-      type: 'loop',
-      loop: {
-        type: 'data',
-        variable_name: '',
-        item_name: '',
-        add_to_results: true
-      },
-      steps: []
-    }]);
-  };
-
   const handleLoopChange = (stepIndex: number, updatedLoop: LoopConfig) => {
     const newSteps = [...steps];
     if (!newSteps[stepIndex]) return;
@@ -448,46 +505,28 @@ export const StepsForm: React.FC<Props> = ({ steps, onUpdate, isNested = false }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 w-full">
       {steps.map((step, index) => (
-        <StepContent
-          key={index}
-          step={step}
-          stepIndex={index}
-          parentSteps={steps}
-          onUpdate={onUpdate}
-          handleStepChange={handleStepChange}
-          handleLoopChange={handleLoopChange}
-          handleLoopStepsChange={handleLoopStepsChange}
-          addVariableOutput={addVariableOutput}
-          removeVariableOutput={removeVariableOutput}
-          handleVariableOutputChange={handleVariableOutputChange}
-          handleTransformationLayerChange={handleTransformationLayerChange}
-          addTransformationLayer={addTransformationLayer}
-          removeTransformationLayer={removeTransformationLayer}
-          removeStep={removeStep}
-        />
-      ))}
-
-      {/* Only show the add buttons if this is not a nested form */}
-      {!isNested && (
-        <div className="flex space-x-4">
-          {/* <button
-            onClick={addStep}
-            className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-          >
-            <Plus size={20} className="mr-2" />
-            Add REST Step
-          </button> */}
-          <button
-            onClick={addLoopStep}
-            className="flex items-center px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
-          >
-            <Plus size={20} className="mr-2" />
-            Add Loop Step
-          </button>
+        <div key={index} className={isNested ? "border-gray-200" : ""}>
+          <StepContent
+            key={index}
+            step={step}
+            stepIndex={index}
+            parentSteps={steps}
+            onUpdate={onUpdate}
+            handleStepChange={handleStepChange}
+            handleLoopChange={handleLoopChange}
+            handleLoopStepsChange={handleLoopStepsChange}
+            addVariableOutput={addVariableOutput}
+            removeVariableOutput={removeVariableOutput}
+            handleVariableOutputChange={handleVariableOutputChange}
+            handleTransformationLayerChange={handleTransformationLayerChange}
+            addTransformationLayer={addTransformationLayer}
+            removeTransformationLayer={removeTransformationLayer}
+            removeStep={removeStep}
+          />
         </div>
-      )}
+      ))}
     </div>
   );
 };
