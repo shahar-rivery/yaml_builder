@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { dump } from 'js-yaml';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { nightOwl } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { YAMLConfig } from './types';
 import { InterfaceParametersForm } from './components/InterfaceParametersForm';
 import { ConnectorForm } from './components/ConnectorForm';
@@ -94,20 +94,7 @@ function App() {
         type: 'rest',
         http_method: 'GET',
         endpoint: '{{%BASE_URL%}}/',
-        variables_output: [
-          // {
-          //   response_location: 'data',
-          //   variable_name: '',
-          //   variable_format: 'json',
-          //   transformation_layers: [
-              // {
-              //   type: 'extract_json',
-              //   from_type: 'json',
-              //   json_path: ''
-              // }
-          //   ]
-          // }
-        ]
+        // variables_output: []
       }
     ]
   });
@@ -177,7 +164,19 @@ function App() {
     }
   };
 
-  const yamlOutput = dump(config);
+  const yamlOutput = dump({
+    interface_parameters: config.interface_parameters,
+    connector: config.connector,
+    steps: config.steps
+  }, {
+    indent: 2,
+    lineWidth: -1,
+    noRefs: true,
+    sortKeys: false,
+    styles: {
+      '!!null': 'empty'
+    }
+  });
 
   return (
     <div className="min-h-screen bg-gray-50 relative">
@@ -531,7 +530,7 @@ function App() {
               <div className="p-6 pt-0">
                 <SyntaxHighlighter
                   language="yaml"
-                  style={tomorrow}
+                  style={nightOwl}
                   className="rounded-md"
                 >
                   {yamlOutput}

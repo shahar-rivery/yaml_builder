@@ -26,6 +26,7 @@ const StepContent: React.FC<{
   removeTransformationLayer: (stepIndex: number, outputIndex: number, layerIndex: number) => void;
   removeStep: (index: number) => void;
   isNested?: boolean;
+  handlePaginationChange: (stepIndex: number, pagination: any) => void;
 }> = ({
   step,
   stepIndex,
@@ -41,7 +42,8 @@ const StepContent: React.FC<{
   addTransformationLayer,
   removeTransformationLayer,
   removeStep,
-  isNested = false
+  isNested = false,
+  handlePaginationChange
 }) => {
   const hasNextStep = parentSteps.length > stepIndex + 1;
   const nextStepIsLoop = hasNextStep && parentSteps[stepIndex + 1].type === 'loop';
@@ -229,13 +231,191 @@ const StepContent: React.FC<{
               />
             </div>
 
-            {/* Variables Output section */}
+            {/* Pagination Section - Moved above Variables Output */}
+            <div className="col-span-2">
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="text-md font-medium">Pagination</h4>
+                <button
+                  onClick={() => handlePaginationChange(stepIndex, {
+                    type: 'page',
+                    parameters: [
+                      {
+                        name: 'page',
+                        value: 1,
+                        increment_by: 1
+                      },
+                      {
+                        name: 'per_page',
+                        value: 30,
+                        increment_by: 0
+                      }
+                    ],
+                    break_conditions: [
+                      {
+                        name: 'BreakIfNoMorePages',
+                        condition: {
+                          type: 'empty_property'
+                        },
+                        variable: '{{%next_page%}}'
+                      }
+                    ],
+                    location: 'qs'
+                  })}
+                  className="flex items-center text-blue-500 hover:text-blue-700"
+                >
+                  <Plus size={20} className="mr-1" />
+                  Add Pagination
+                </button>
+              </div>
+
+              {step.pagination && (
+                <div className="p-4 rounded-lg shadow-md bg-white">
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Type
+                        <span className="ml-1 text-xs text-gray-500">(Pagination type)</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={step.pagination.type}
+                        onChange={(e) => handlePaginationChange(stepIndex, {
+                          ...step.pagination!,
+                          type: e.target.value
+                        })}
+                        className="w-full px-3 py-2 border rounded-md"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Location
+                        <span className="ml-1 text-xs text-gray-500">(Where to add pagination parameters)</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={step.pagination.location}
+                        onChange={(e) => handlePaginationChange(stepIndex, {
+                          ...step.pagination!,
+                          location: e.target.value
+                        })}
+                        className="w-full px-3 py-2 border rounded-md"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Parameters */}
+                  <div className="mb-4">
+                    <h5 className="text-sm font-medium mb-2">Parameters</h5>
+                    {step.pagination.parameters.map((param, paramIndex) => (
+                      <div key={paramIndex} className="grid grid-cols-3 gap-4 mb-2">
+                        <div>
+                          <label className="block text-xs font-medium mb-1">Name</label>
+                          <input
+                            type="text"
+                            value={param.name}
+                            onChange={(e) => {
+                              const newParams = [...step.pagination!.parameters];
+                              newParams[paramIndex] = { ...param, name: e.target.value };
+                              handlePaginationChange(stepIndex, {
+                                ...step.pagination!,
+                                parameters: newParams
+                              });
+                            }}
+                            className="w-full px-2 py-1 text-sm border rounded-md"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium mb-1">Value</label>
+                          <input
+                            type="number"
+                            value={param.value}
+                            onChange={(e) => {
+                              const newParams = [...step.pagination!.parameters];
+                              newParams[paramIndex] = { ...param, value: parseInt(e.target.value) };
+                              handlePaginationChange(stepIndex, {
+                                ...step.pagination!,
+                                parameters: newParams
+                              });
+                            }}
+                            className="w-full px-2 py-1 text-sm border rounded-md"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium mb-1">Increment By</label>
+                          <input
+                            type="number"
+                            value={param.increment_by}
+                            onChange={(e) => {
+                              const newParams = [...step.pagination!.parameters];
+                              newParams[paramIndex] = { ...param, increment_by: parseInt(e.target.value) };
+                              handlePaginationChange(stepIndex, {
+                                ...step.pagination!,
+                                parameters: newParams
+                              });
+                            }}
+                            className="w-full px-2 py-1 text-sm border rounded-md"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Break Conditions */}
+                  <div>
+                    <h5 className="text-sm font-medium mb-2">Break Conditions</h5>
+                    {step.pagination.break_conditions.map((condition, conditionIndex) => (
+                      <div key={conditionIndex} className="grid grid-cols-2 gap-4 mb-2">
+                        <div>
+                          <label className="block text-xs font-medium mb-1">Name</label>
+                          <input
+                            type="text"
+                            value={condition.name}
+                            onChange={(e) => {
+                              const newConditions = [...step.pagination!.break_conditions];
+                              newConditions[conditionIndex] = { ...condition, name: e.target.value };
+                              handlePaginationChange(stepIndex, {
+                                ...step.pagination!,
+                                break_conditions: newConditions
+                              });
+                            }}
+                            className="w-full px-2 py-1 text-sm border rounded-md"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium mb-1">Variable</label>
+                          <input
+                            type="text"
+                            value={condition.variable}
+                            onChange={(e) => {
+                              const newConditions = [...step.pagination!.break_conditions];
+                              newConditions[conditionIndex] = { ...condition, variable: e.target.value };
+                              handlePaginationChange(stepIndex, {
+                                ...step.pagination!,
+                                break_conditions: newConditions
+                              });
+                            }}
+                            className="w-full px-2 py-1 text-sm border rounded-md"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Variables Output section - Now disabled when pagination is enabled */}
             <div className="col-span-2">
               <div className="flex justify-between items-center mb-4">
                 <h4 className="text-md font-medium">Variable Outputs</h4>
                 <button
                   onClick={() => addVariableOutput(stepIndex)}
-                  className="flex items-center text-blue-500 hover:text-blue-700"
+                  disabled={!!step.pagination}
+                  className={`flex items-center ${
+                    step.pagination 
+                      ? 'text-gray-400 cursor-not-allowed' 
+                      : 'text-blue-500 hover:text-blue-700'
+                  }`}
                 >
                   <Plus size={20} className="mr-1" />
                   Add Output
@@ -248,7 +428,12 @@ const StepContent: React.FC<{
                     <h5 className="text-sm font-medium">Output {outputIndex + 1}</h5>
                     <button
                       onClick={() => removeVariableOutput(stepIndex, outputIndex)}
-                      className="p-1 text-red-500 hover:text-red-700"
+                      disabled={!!step.pagination}
+                      className={`p-1 ${
+                        step.pagination 
+                          ? 'text-gray-400 cursor-not-allowed' 
+                          : 'text-red-500 hover:text-red-700'
+                      }`}
                     >
                       <Trash2 size={16} />
                     </button>
@@ -264,7 +449,10 @@ const StepContent: React.FC<{
                         type="text"
                         value={output.response_location}
                         onChange={(e) => handleVariableOutputChange(stepIndex, outputIndex, 'response_location', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-md shadow-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                        disabled={!!step.pagination}
+                        className={`w-full px-3 py-2 border rounded-md ${
+                          step.pagination ? 'bg-gray-50' : ''
+                        }`}
                       />
                     </div>
                     <div>
@@ -276,7 +464,10 @@ const StepContent: React.FC<{
                         type="text"
                         value={output.variable_name}
                         onChange={(e) => handleVariableOutputChange(stepIndex, outputIndex, 'variable_name', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-md shadow-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                        disabled={!!step.pagination}
+                        className={`w-full px-3 py-2 border rounded-md ${
+                          step.pagination ? 'bg-gray-50' : ''
+                        }`}
                       />
                     </div>
                   </div>
@@ -289,7 +480,12 @@ const StepContent: React.FC<{
                           <span className="text-xs font-medium">Layer {layerIndex + 1}</span>
                           <button
                             onClick={() => removeTransformationLayer(stepIndex, outputIndex, layerIndex)}
-                            className="p-1 text-red-500 hover:text-red-700"
+                            disabled={!!step.pagination}
+                            className={`p-1 ${
+                              step.pagination 
+                                ? 'text-gray-400 cursor-not-allowed' 
+                                : 'text-red-500 hover:text-red-700'
+                            }`}
                           >
                             <Trash2 size={14} />
                           </button>
@@ -329,7 +525,10 @@ const StepContent: React.FC<{
                               type="text"
                               value={layer.json_path}
                               onChange={(e) => handleTransformationLayerChange(stepIndex, outputIndex, layerIndex, 'json_path', e.target.value)}
-                              className="w-full px-2 py-1 text-sm border rounded-md"
+                              disabled={!!step.pagination}
+                              className={`w-full px-2 py-1 text-sm border rounded-md ${
+                                step.pagination ? 'bg-gray-50' : ''
+                              }`}
                               placeholder="$.items[*]"
                             />
                           </div>
@@ -378,7 +577,6 @@ const StepContent: React.FC<{
     </div>
   );
 };
-
 export const StepsForm: React.FC<Props> = ({ steps, onUpdate, isNested = false }) => {
   const handleStepChange = (index: number, field: keyof Step, value: string) => {
     const newSteps = [...steps];
@@ -501,6 +699,53 @@ export const StepsForm: React.FC<Props> = ({ steps, onUpdate, isNested = false }
     onUpdate(steps.filter((_, i) => i !== index));
   };
 
+  const handlePaginationChange = (stepIndex: number, pagination: any) => {
+    const newSteps = [...steps];
+    if (!newSteps[stepIndex]) return;
+    
+    // Update the step with pagination including variables_output inside pagination
+    // and remove the step's variables_output
+    newSteps[stepIndex] = {
+      ...newSteps[stepIndex],
+      pagination: {
+        type: pagination.type,
+        parameters: pagination.parameters,
+        break_conditions: pagination.break_conditions,
+        location: pagination.location,
+        variables_output: [
+          {
+            response_location: "data",
+            variable_name: "next_page",
+            overwrite_storage: true,
+            variable_format: "json",
+            transformation_layers: [
+              {
+                type: "extract_json",
+                json_path: "$.next_page",
+                from_type: "json"
+              }
+            ]
+          },
+          {
+            response_location: "data",
+            variable_name: "rivers",
+            variable_format: "json",
+            transformation_layers: [
+              {
+                type: "extract_json",
+                json_path: "$.items[*].river_cross_id",
+                from_type: "json"
+              }
+            ]
+          }
+        ]
+      },
+      variables_output: undefined // Remove the step's variables_output
+    };
+    
+    onUpdate(newSteps);
+  };
+
   return (
     <div className="space-y-4">
       {steps.map((step, index) => (
@@ -521,6 +766,7 @@ export const StepsForm: React.FC<Props> = ({ steps, onUpdate, isNested = false }
           removeTransformationLayer={removeTransformationLayer}
           removeStep={removeStep}
           isNested={isNested}
+          handlePaginationChange={handlePaginationChange}
         />
       ))}
     </div>

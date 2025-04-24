@@ -54,25 +54,56 @@ export interface Step {
     response_location: string;
     variable_name: string;
     variable_format: string;
+    overwrite_storage?: boolean;
     transformation_layers?: Array<{
       type: string;
       from_type: string;
       json_path: string;
     }>;
   }>;
+  steps?: Step[];
   loop?: {
     type: string;
     variable_name: string;
     item_name: string;
     add_to_results: boolean;
   };
-  steps?: Step[];
+  pagination?: Pagination;
 }
+
+export interface Pagination {
+  type: string;
+  parameters: Array<{
+    name: string;
+    value: number;
+    increment_by: number;
+  }>;
+  break_conditions: Array<{
+    name: string;
+    condition: {
+      type: string;
+    };
+    variable: string;
+  }>;
+  location: string;
+  variables_output?: Array<{
+    response_location: string;
+    variable_name: string;
+    variable_format: string;
+    overwrite_storage?: boolean;
+    transformation_layers?: Array<{
+      type: string;
+      from_type: string;
+      json_path: string;
+    }>;
+  }>;
+}
+
 
 export interface YAMLConfig {
   interface_parameters: {
     section: Section;
   };
-  connector: Connector;
+  connector: Connector[];
   steps: Step[];
 }
