@@ -60,7 +60,12 @@ export interface Step {
       json_path: string;
     }>;
   }>;
-  loop?: LoopConfig;
+  loop?: {
+    type: string;
+    variable_name: string;
+    item_name: string;
+    add_to_results: boolean;
+  };
   steps?: Step[];
 }
 

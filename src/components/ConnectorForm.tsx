@@ -91,19 +91,25 @@ export const ConnectorForm: React.FC<Props> = ({ connector, onUpdate }) => {
         <p className="text-sm text-gray-600 mb-4">Configure how your pipeline variables are formatted and stored. These settings determine how data is processed and where it's saved.</p>
         <div className="space-y-4">
           {Object.entries(connector.variables_metadata).map(([varName, config]) => (
-            <div key={varName} className="flex items-center gap-4 p-4 bg-gray-50 rounded-md">
-              <div className="flex-1">
-                <p className="font-medium">{varName}</p>
-                <p className="text-sm text-gray-600">
-                  Format: {config.format} | Storage: {config.storage_name}
-                </p>
+            <div key={varName}>
+              
+              <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-md">
+                <div className="flex-1">
+                {varName === 'final_output_file' && (
+                <p className="text-sm text-gray-600 mb-2">Pre-configured variable for storing the final output of your workflow</p>
+              )}
+                  <p className="font-medium">{varName}</p>
+                  <p className="text-sm text-gray-600">
+                    Format: {config.format} | Storage: {config.storage_name}
+                  </p>
+                </div>
+                <button
+                  onClick={() => removeVariable(varName)}
+                  className="p-2 text-red-500 hover:text-red-700"
+                >
+                  <Trash2 size={20} />
+                </button>
               </div>
-              <button
-                onClick={() => removeVariable(varName)}
-                className="p-2 text-red-500 hover:text-red-700"
-              >
-                <Trash2 size={20} />
-              </button>
             </div>
           ))}
 

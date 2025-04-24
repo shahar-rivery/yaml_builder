@@ -25,6 +25,7 @@ const StepContent: React.FC<{
   addTransformationLayer: (stepIndex: number, outputIndex: number) => void;
   removeTransformationLayer: (stepIndex: number, outputIndex: number, layerIndex: number) => void;
   removeStep: (index: number) => void;
+  isNested?: boolean;
 }> = ({
   step,
   stepIndex,
@@ -40,7 +41,12 @@ const StepContent: React.FC<{
   addTransformationLayer,
   removeTransformationLayer,
   removeStep,
+  isNested = false
 }) => {
+  const hasNextStep = parentSteps.length > stepIndex + 1;
+  const nextStepIsLoop = hasNextStep && parentSteps[stepIndex + 1].type === 'loop';
+  const hasLoopSteps = step.steps && step.steps.length > 0;
+
   const addNestedStep = (stepIndex: number) => {
     const newSteps = [...parentSteps];
     if (!newSteps[stepIndex]) return;
@@ -73,11 +79,7 @@ const StepContent: React.FC<{
     const newSteps = [...parentSteps];
     if (!newSteps[stepIndex]) return;
     
-    if (!newSteps[stepIndex].steps) {
-      newSteps[stepIndex].steps = [];
-    }
-    
-    newSteps[stepIndex].steps.push({
+    newSteps.splice(stepIndex + 1, 0, {
       name: '',
       description: '',
       type: 'loop',
@@ -86,8 +88,7 @@ const StepContent: React.FC<{
         variable_name: '',
         item_name: '',
         add_to_results: true
-      },
-      steps: []
+      }
     });
     onUpdate(newSteps);
   };
@@ -95,7 +96,9 @@ const StepContent: React.FC<{
   return (
     <div className="p-4 shadow-md rounded-lg space-y-4 w-full bg-white">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">Step {stepIndex + 1}</h3>
+        <h3 className="text-lg font-medium">
+          {step.type === 'loop' ? 'Loop Block' : isNested ? 'Nested REST Step' : 'REST Step'}
+        </h3>
         <button
           onClick={() => removeStep(stepIndex)}
           className="p-2 text-red-500 hover:text-red-700"
@@ -177,7 +180,12 @@ const StepContent: React.FC<{
                       };
                       handleLoopStepsChange(stepIndex, [...(step.steps || []), newStep]);
                     }}
-                    className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                    disabled={hasLoopSteps}
+                    className={`flex items-center px-4 py-2 rounded-md ${
+                      hasLoopSteps 
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                        : 'bg-blue-500 text-white hover:bg-blue-600'
+                    }`}
                   >
                     <Plus size={20} className="mr-2" />
                     Add Nested REST Step to Loop
@@ -335,45 +343,34 @@ const StepContent: React.FC<{
 
             {/* Add nested steps section */}
             <div className="mt-2 col-span-2 w-full">
-              <div className="bg-gray-50 p-3 rounded-lg shadow-md">
-                <div className="flex justify-between items-center mb-4">
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-900">Nested Steps</h4>
-                    <p className="text-sm text-gray-600 mt-1">Add Loop steps that will be executed in sequence</p>
-                  </div>
-                  <div>
-                    <button
-                      onClick={() => addNestedLoopStep(stepIndex)}
-                      className="flex items-center px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors shadow-sm hover:shadow-md"
-                    >
-                      <Plus size={18} className="mr-1" />
-                      Add Loop Step
-                    </button>
-                  </div>
+              <button
+                onClick={() => addNestedLoopStep(stepIndex)}
+                disabled={nextStepIsLoop}
+                className={`px-4 py-2 rounded-md transition-colors shadow-sm ${
+                  nextStepIsLoop
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-blue-500 text-white hover:bg-blue-600 hover:shadow-md'
+                }`}
+              >
+                + Add Loop Block
+              </button>
+              
+              {step.steps && step.steps.length > 0 && (
+                <div className="mt-4">
+                  <StepsForm
+                    steps={step.steps}
+                    onUpdate={(updatedSteps) => {
+                      const newSteps = [...parentSteps];
+                      newSteps[stepIndex] = {
+                        ...newSteps[stepIndex],
+                        steps: updatedSteps
+                      };
+                      onUpdate(newSteps);
+                    }}
+                    isNested={true}
+                  />
                 </div>
-                
-                {step.steps && step.steps.length > 0 ? (
-                  <div className="space-y-2">
-                    <StepsForm
-                      steps={step.steps}
-                      onUpdate={(updatedSteps) => {
-                        const newSteps = [...parentSteps];
-                        newSteps[stepIndex] = {
-                          ...newSteps[stepIndex],
-                          steps: updatedSteps
-                        };
-                        onUpdate(newSteps);
-                      }}
-                      isNested={true}
-                    />
-                  </div>
-                ) : (
-                  <div className="text-center py-6 bg-gray-50 rounded-lg shadow-inner">
-                    <p className="text-gray-500">No nested steps added yet</p>
-                    <p className="text-sm text-gray-400 mt-1">Click the button above to add a step</p>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
           </>
         )}
@@ -505,27 +502,26 @@ export const StepsForm: React.FC<Props> = ({ steps, onUpdate, isNested = false }
   };
 
   return (
-    <div className="space-y-4 w-full">
+    <div className="space-y-4">
       {steps.map((step, index) => (
-        <div key={index} className={isNested ? "border-gray-200" : ""}>
-          <StepContent
-            key={index}
-            step={step}
-            stepIndex={index}
-            parentSteps={steps}
-            onUpdate={onUpdate}
-            handleStepChange={handleStepChange}
-            handleLoopChange={handleLoopChange}
-            handleLoopStepsChange={handleLoopStepsChange}
-            addVariableOutput={addVariableOutput}
-            removeVariableOutput={removeVariableOutput}
-            handleVariableOutputChange={handleVariableOutputChange}
-            handleTransformationLayerChange={handleTransformationLayerChange}
-            addTransformationLayer={addTransformationLayer}
-            removeTransformationLayer={removeTransformationLayer}
-            removeStep={removeStep}
-          />
-        </div>
+        <StepContent
+          key={index}
+          step={step}
+          stepIndex={index}
+          parentSteps={steps}
+          onUpdate={onUpdate}
+          handleStepChange={handleStepChange}
+          handleLoopChange={handleLoopChange}
+          handleLoopStepsChange={handleLoopStepsChange}
+          addVariableOutput={addVariableOutput}
+          removeVariableOutput={removeVariableOutput}
+          handleVariableOutputChange={handleVariableOutputChange}
+          handleTransformationLayerChange={handleTransformationLayerChange}
+          addTransformationLayer={addTransformationLayer}
+          removeTransformationLayer={removeTransformationLayer}
+          removeStep={removeStep}
+          isNested={isNested}
+        />
       ))}
     </div>
   );

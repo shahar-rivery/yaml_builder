@@ -74,10 +74,11 @@ function App() {
       base_url: '',
       default_headers: {},
       variables_metadata: {
-        // final_output_file: {
-        //   format: 'json',
-        //   storage_name: 'results dir'
-        // }
+        
+        final_output_file: { 
+          format: 'json',
+          storage_name: 'results dir'
+        }
       },
       variables_storages: [
         {
@@ -403,7 +404,7 @@ function App() {
                   onClick={() => toggleSection('steps')}
                   className="w-full p-6 flex justify-between items-center text-left"
                 >
-                  <h2 className="text-xl font-semibold">Steps</h2>
+                  <h2 className="text-xl font-semibold">Workflow Steps</h2>
                   {expandedSections.steps ? <ChevronUp /> : <ChevronDown />}
                 </button>
                 {expandedSections.steps && (
