@@ -235,37 +235,56 @@ const StepContent: React.FC<{
             <div className="col-span-2">
               <div className="flex justify-between items-center mb-4">
                 <h4 className="text-md font-medium">Pagination</h4>
-                <button
-                  onClick={() => handlePaginationChange(stepIndex, {
-                    type: 'page',
-                    parameters: [
-                      {
-                        name: 'page',
-                        value: 1,
-                        increment_by: 1
-                      },
-                      {
-                        name: 'per_page',
-                        value: 30,
-                        increment_by: 0
-                      }
-                    ],
-                    break_conditions: [
-                      {
-                        name: 'BreakIfNoMorePages',
-                        condition: {
-                          type: 'empty_property'
-                        },
-                        variable: '{{%next_page%}}'
-                      }
-                    ],
-                    location: 'qs'
-                  })}
-                  className="flex items-center text-blue-500 hover:text-blue-700"
-                >
-                  <Plus size={20} className="mr-1" />
-                  Add Pagination
-                </button>
+                <div className="flex items-center space-x-2">
+                  {step.pagination ? (
+                    <button
+                      onClick={() => {
+                        const newSteps = [...parentSteps];
+                        newSteps[stepIndex] = {
+                          ...newSteps[stepIndex],
+                          pagination: undefined
+                        };
+                        onUpdate(newSteps);
+                      }}
+                      className="flex items-center text-red-500 hover:text-red-700"
+                    >
+                      <Trash2 size={20} className="mr-1" />
+                      Remove Pagination
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handlePaginationChange(stepIndex, {
+                        type: 'page',
+                        parameters: [
+                          {
+                            name: 'page',
+                            value: 1,
+                            increment_by: 1
+                          },
+                          {
+                            name: 'per_page',
+                            value: 0,
+                            increment_by: 0
+                          }
+                        ],
+                        break_conditions: [
+                          {
+                            name: 'BreakIfNoMorePages',
+                            condition: {
+                              type: 'empty_property'
+                            },
+                            variable: '{{%next_page%}}'
+                          }
+                        ],
+                        location: 'qs'
+                      })}
+                      className="flex items-center text-blue-500 hover:text-blue-700"
+                    >
+                      <Plus size={20} className="mr-1" />
+                      Add Pagination
+                    </button>
+                  )}
+                </div>
               </div>
 
               {step.pagination && (
@@ -274,22 +293,73 @@ const StepContent: React.FC<{
                     <div>
                       <label className="block text-sm font-medium mb-1">
                         Type
-                        <span className="ml-1 text-xs text-gray-500">(Pagination type)</span>
+                        <span className="ml-1 text-xs text-gray-500">(Pagination type: 'page', 'offset', or 'cursor')</span>
                       </label>
-                      <input
-                        type="text"
+                      <select
                         value={step.pagination.type}
-                        onChange={(e) => handlePaginationChange(stepIndex, {
-                          ...step.pagination!,
-                          type: e.target.value
-                        })}
+                        onChange={(e) => {
+                          const newType = e.target.value;
+                          let newPagination = { ...step.pagination! };
+                          
+                          if (newType === 'cursor') {
+                            newPagination = {
+                              type: 'cursor',
+                              cursor_path: '$.next',
+                              location: 'body',
+                              break_conditions: [
+                                {
+                                  name: 'BreakIfNoNextPage',
+                                  condition: {
+                                    type: 'empty_property',
+                                    value: ''
+                                  },
+                                  variable: '{{%next_page%}}'
+                                }
+                              ]
+                            };
+                          } else if (newType === 'offset') {
+                            newPagination = {
+                              type: 'offset',
+                              parameters: [
+                                {
+                                  name: 'offset',
+                                  value: 0,
+                                  increment_by: 100
+                                },
+                                {
+                                  name: 'limit',
+                                  value: 100,
+                                  increment_by: 0
+                                }
+                              ],
+                              break_conditions: [
+                                {
+                                  name: 'BreakIfNoMorePages',
+                                  condition: {
+                                    type: 'empty_property'
+                                  },
+                                  variable: '{{%next_page%}}'
+                                }
+                              ],
+                              location: 'qs'
+                            };
+                          } else {
+                            newPagination.type = newType;
+                          }
+                          
+                          handlePaginationChange(stepIndex, newPagination);
+                        }}
                         className="w-full px-3 py-2 border rounded-md"
-                      />
+                      >
+                        <option value="page">Page-based</option>
+                        <option value="offset">Offset-based</option>
+                        <option value="cursor">Cursor-based</option>
+                      </select>
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">
                         Location
-                        <span className="ml-1 text-xs text-gray-500">(Where to add pagination parameters)</span>
+                        <span className="ml-1 text-xs text-gray-500">(Where to add pagination: 'qs' for query string, 'body' for request body)</span>
                       </label>
                       <input
                         type="text"
@@ -303,66 +373,93 @@ const StepContent: React.FC<{
                     </div>
                   </div>
 
-                  {/* Parameters */}
-                  <div className="mb-4">
-                    <h5 className="text-sm font-medium mb-2">Parameters</h5>
-                    {step.pagination.parameters.map((param, paramIndex) => (
-                      <div key={paramIndex} className="grid grid-cols-3 gap-4 mb-2">
-                        <div>
-                          <label className="block text-xs font-medium mb-1">Name</label>
-                          <input
-                            type="text"
-                            value={param.name}
-                            onChange={(e) => {
-                              const newParams = [...step.pagination!.parameters];
-                              newParams[paramIndex] = { ...param, name: e.target.value };
-                              handlePaginationChange(stepIndex, {
-                                ...step.pagination!,
-                                parameters: newParams
-                              });
-                            }}
-                            className="w-full px-2 py-1 text-sm border rounded-md"
-                          />
+                  {/* Cursor Path for cursor-based pagination */}
+                  {step.pagination.type === 'cursor' && (
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium mb-1">
+                        Cursor Path
+                        <span className="ml-1 text-xs text-gray-500">(JSON path to the cursor in the response)</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={step.pagination.cursor_path || '$.next'}
+                        onChange={(e) => handlePaginationChange(stepIndex, {
+                          ...step.pagination!,
+                          cursor_path: e.target.value
+                        })}
+                        className="w-full px-3 py-2 border rounded-md"
+                        placeholder="$.next"
+                      />
+                    </div>
+                  )}
+
+                  {/* Parameters for page and offset-based pagination */}
+                  {(step.pagination.type === 'page' || step.pagination.type === 'offset') && (
+                    <div className="mb-4">
+                      <h5 className="text-sm font-medium mb-2">Parameters</h5>
+                      <p className="text-xs text-gray-500 mb-2">Configure how pagination parameters are handled in each request</p>
+                      {step.pagination.parameters.map((param, paramIndex) => (
+                        <div key={paramIndex} className="grid grid-cols-3 gap-4 mb-2">
+                          <div>
+                            <label className="block text-xs font-medium mb-1">Name</label>
+                            <input
+                              type="text"
+                              value={param.name}
+                              onChange={(e) => {
+                                const newParams = [...step.pagination!.parameters];
+                                newParams[paramIndex] = { ...param, name: e.target.value };
+                                handlePaginationChange(stepIndex, {
+                                  ...step.pagination!,
+                                  parameters: newParams
+                                });
+                              }}
+                              className="w-full px-2 py-1 text-sm border rounded-md"
+                              placeholder={step.pagination.type === 'offset' ? 'e.g., offset' : 'e.g., page'}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium mb-1">Value</label>
+                            <input
+                              type="number"
+                              value={param.value}
+                              onChange={(e) => {
+                                const newParams = [...step.pagination!.parameters];
+                                newParams[paramIndex] = { ...param, value: parseInt(e.target.value) };
+                                handlePaginationChange(stepIndex, {
+                                  ...step.pagination!,
+                                  parameters: newParams
+                                });
+                              }}
+                              className="w-full px-2 py-1 text-sm border rounded-md"
+                              placeholder="Starting value"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium mb-1">Increment By</label>
+                            <input
+                              type="number"
+                              value={param.increment_by}
+                              onChange={(e) => {
+                                const newParams = [...step.pagination!.parameters];
+                                newParams[paramIndex] = { ...param, increment_by: parseInt(e.target.value) };
+                                handlePaginationChange(stepIndex, {
+                                  ...step.pagination!,
+                                  parameters: newParams
+                                });
+                              }}
+                              className="w-full px-2 py-1 text-sm border rounded-md"
+                              placeholder="How much to increase by"
+                            />
+                          </div>
                         </div>
-                        <div>
-                          <label className="block text-xs font-medium mb-1">Value</label>
-                          <input
-                            type="number"
-                            value={param.value}
-                            onChange={(e) => {
-                              const newParams = [...step.pagination!.parameters];
-                              newParams[paramIndex] = { ...param, value: parseInt(e.target.value) };
-                              handlePaginationChange(stepIndex, {
-                                ...step.pagination!,
-                                parameters: newParams
-                              });
-                            }}
-                            className="w-full px-2 py-1 text-sm border rounded-md"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium mb-1">Increment By</label>
-                          <input
-                            type="number"
-                            value={param.increment_by}
-                            onChange={(e) => {
-                              const newParams = [...step.pagination!.parameters];
-                              newParams[paramIndex] = { ...param, increment_by: parseInt(e.target.value) };
-                              handlePaginationChange(stepIndex, {
-                                ...step.pagination!,
-                                parameters: newParams
-                              });
-                            }}
-                            className="w-full px-2 py-1 text-sm border rounded-md"
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
 
                   {/* Break Conditions */}
                   <div>
                     <h5 className="text-sm font-medium mb-2">Break Conditions</h5>
+                    <p className="text-xs text-gray-500 mb-2">Define when to stop pagination based on response conditions</p>
                     {step.pagination.break_conditions.map((condition, conditionIndex) => (
                       <div key={conditionIndex} className="grid grid-cols-2 gap-4 mb-2">
                         <div>
@@ -379,6 +476,7 @@ const StepContent: React.FC<{
                               });
                             }}
                             className="w-full px-2 py-1 text-sm border rounded-md"
+                            placeholder="e.g., BreakIfNoMorePages"
                           />
                         </div>
                         <div>
@@ -395,6 +493,7 @@ const StepContent: React.FC<{
                               });
                             }}
                             className="w-full px-2 py-1 text-sm border rounded-md"
+                            placeholder="e.g., {{%next_page%}}"
                           />
                         </div>
                       </div>

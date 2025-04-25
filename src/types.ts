@@ -73,7 +73,7 @@ export interface Step {
 
 export interface Pagination {
   type: string;
-  parameters: Array<{
+  parameters?: Array<{
     name: string;
     value: number;
     increment_by: number;
@@ -82,10 +82,12 @@ export interface Pagination {
     name: string;
     condition: {
       type: string;
+      value?: string;
     };
     variable: string;
   }>;
   location: string;
+  cursor_path?: string;
   variables_output?: Array<{
     response_location: string;
     variable_name: string;
