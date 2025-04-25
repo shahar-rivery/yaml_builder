@@ -149,8 +149,8 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
   return (
     <div className="space-y-4">
       {/* Default Parameter Form */}
-      <div className="space-y-4 p-4 border rounded-lg bg-gray-50">
-        <h3 className="text-sm font-medium text-gray-700">New Parameter</h3>
+      <div className="space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
+        <h3 className="text-sm font-medium text-gray-900">New Parameter</h3>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -164,7 +164,7 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
               placeholder="e.g., account_id"
               value={defaultParameter.name}
               onChange={(e) => updateDefaultParameter('name', e.target.value)}
-              className="border rounded p-2 w-full"
+              className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#E94E77] focus:border-[#E94E77]"
             />
           </div>
           <div>
@@ -177,7 +177,7 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
             <select
               value={defaultParameter.type}
               onChange={(e) => updateDefaultParameter('type', e.target.value)}
-              className="border rounded p-2 w-full"
+              className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full focus:outline-none focus:ring-1 focus:ring-[#E94E77] focus:border-[#E94E77]"
             >
               <option value="string">String</option>
               <option value="authentication">Authentication</option>
@@ -198,7 +198,7 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
               <select
                 value={defaultParameter.auth_type}
                 onChange={(e) => updateDefaultParameter('auth_type', e.target.value)}
-                className="border rounded p-2 w-full"
+                className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full focus:outline-none focus:ring-1 focus:ring-[#E94E77] focus:border-[#E94E77]"
               >
                 <option value="bearer">Bearer Token</option>
                 <option value="basic_http">Basic HTTP</option>
@@ -217,7 +217,7 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
                 <select
                   value={defaultParameter.location}
                   onChange={(e) => updateDefaultParameter('location', e.target.value)}
-                  className="border rounded p-2 w-full"
+                  className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full focus:outline-none focus:ring-1 focus:ring-[#E94E77] focus:border-[#E94E77]"
                 >
                   <option value="header">Header</option>
                   <option value="query_param">Query Parameter</option>
@@ -239,7 +239,7 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
               <select
                 value={defaultParameter.period_type}
                 onChange={(e) => updateDefaultParameter('period_type', e.target.value)}
-                className="border rounded p-2 w-full"
+                className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full focus:outline-none focus:ring-1 focus:ring-[#E94E77] focus:border-[#E94E77]"
               >
                 <option value="date">Date</option>
                 <option value="datetime">DateTime</option>
@@ -257,7 +257,7 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
                 placeholder="YYYY-MM-DD"
                 value={defaultParameter.format}
                 onChange={(e) => updateDefaultParameter('format', e.target.value)}
-                className="border rounded p-2 w-full"
+                className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#E94E77] focus:border-[#E94E77]"
               />
             </div>
           </div>
@@ -266,10 +266,10 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
         <button
           onClick={addParameter}
           disabled={!defaultParameter.name}
-          className={`flex items-center px-4 py-2 rounded-md ${
+          className={`flex items-center px-4 py-2 rounded-lg ${
             defaultParameter.name 
-              ? 'bg-blue-500 text-white hover:bg-blue-600' 
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              ? 'bg-[#E94E77] text-white hover:bg-[#E94E77]/90' 
+              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
           }`}
         >
           <PlusCircle size={20} className="mr-2" />
@@ -279,7 +279,7 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
 
       {/* Existing Parameters */}
       {parameters.map((param, index) => (
-        <div key={index} className="space-y-4 p-4 border rounded-lg">
+        <div key={index} className="space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
           <div className="flex justify-between">
             <div className="flex-grow space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -295,7 +295,7 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
                     placeholder="e.g., account_id"
                     value={param.name}
                     onChange={(e) => updateParameter(index, 'name', e.target.value)}
-                    className="border rounded p-2 w-full"
+                    className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#E94E77] focus:border-[#E94E77]"
                   />
                 </div>
                 <div>
@@ -308,7 +308,7 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
                   <select
                     value={param.type}
                     onChange={(e) => updateParameter(index, 'type', e.target.value)}
-                    className="border rounded p-2 w-full"
+                    className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full focus:outline-none focus:ring-1 focus:ring-[#E94E77] focus:border-[#E94E77]"
                   >
                     <option value="string">String</option>
                     <option value="authentication">Authentication</option>
@@ -329,7 +329,7 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
                     <select
                       value={param.auth_type}
                       onChange={(e) => updateParameter(index, 'auth_type', e.target.value)}
-                      className="border rounded p-2 w-full"
+                      className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full focus:outline-none focus:ring-1 focus:ring-[#E94E77] focus:border-[#E94E77]"
                     >
                       <option value="bearer">Bearer Token</option>
                       <option value="basic_http">Basic HTTP</option>
@@ -348,7 +348,7 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
                       <select
                         value={param.location}
                         onChange={(e) => updateParameter(index, 'location', e.target.value)}
-                        className="border rounded p-2 w-full"
+                        className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full focus:outline-none focus:ring-1 focus:ring-[#E94E77] focus:border-[#E94E77]"
                       >
                         <option value="header">Header</option>
                         <option value="query_param">Query Parameter</option>
@@ -370,7 +370,7 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
                     <select
                       value={param.period_type}
                       onChange={(e) => updateParameter(index, 'period_type', e.target.value)}
-                      className="border rounded p-2 w-full"
+                      className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full focus:outline-none focus:ring-1 focus:ring-[#E94E77] focus:border-[#E94E77]"
                     >
                       <option value="date">Date</option>
                       <option value="datetime">DateTime</option>
@@ -388,7 +388,7 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
                       placeholder="YYYY-MM-DD"
                       value={param.format}
                       onChange={(e) => updateParameter(index, 'format', e.target.value)}
-                      className="border rounded p-2 w-full"
+                      className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#E94E77] focus:border-[#E94E77]"
                     />
                   </div>
                 </div>
@@ -409,7 +409,7 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
                           type="text"
                           value={field.name}
                           readOnly
-                          className="border rounded p-2 bg-gray-100"
+                          className="bg-gray-50 border border-gray-200 text-gray-500 rounded-lg p-2"
                         />
                         <input
                           type={param.type === 'date_range' ? 'date' : 'text'}
@@ -420,7 +420,7 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
                             newFields[fieldIndex] = { ...field, value: e.target.value };
                             updateParameter(index, 'fields', newFields);
                           }}
-                          className="border rounded p-2"
+                          className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#E94E77] focus:border-[#E94E77]"
                         />
                       </div>
                     </div>
@@ -430,7 +430,7 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
             </div>
             <button
               onClick={() => removeParameter(index)}
-              className="ml-4 text-red-500 hover:text-red-700"
+              className="ml-4 text-gray-400 hover:text-[#E94E77] transition-colors"
             >
               <Trash2 size={20} />
             </button>

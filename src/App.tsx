@@ -100,11 +100,11 @@ function App() {
   });
 
   const [expandedSections, setExpandedSections] = useState({
-    parameters: true,
-    connector: true,
-    steps: true,
-    yaml: true,
-    docs: true
+    parameters: false,
+    connector: false,
+    steps: false,
+    yaml: false,
+    docs: false
   });
 
   const [expandedDocs, setExpandedDocs] = useState({
@@ -214,47 +214,42 @@ function App() {
   };
 
   const isStepsEnabled = () => {
-    return (isParametersValid() || hasEverFilled.parameters) && (isConnectorValid() || hasEverFilled.parameters);
+    return isConnectorValid() && (isParametersValid() || hasEverFilled.parameters);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 relative">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center">
-            <FileText size={32} className="text-blue-500 mr-3" />
-            <h1 className="text-3xl font-bold text-gray-900">YAML Builder</h1>
+    <div className="min-h-screen bg-gray-50">
+      <div className="bg-white border-b border-gray-200">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center">
+              <FileText size={32} className="text-[#0066CC] mr-3" />
+              <h1 className="text-3xl font-bold text-gray-900">YAML Builder</h1>
+            </div>
           </div>
         </div>
-        <p className="text-gray-600 mb-8">
-          This YAML Builder is designed to help you create and configure your data pipeline without needing to write YAML code manually. 
-          It provides a user-friendly interface where you can define your API connections, input parameters, and data processing steps. 
-          As you make changes in the interface, the YAML configuration is automatically generated and displayed in the right panel. 
-          You can then copy this YAML and use it in your Rivery Blueprint.
-        </p>
-        <p className="text-gray-600 mb-8">
-          For complete documentation, please refer to the{' '}
-          <a 
-            href="https://docs.rivery.io/docs/blueprint" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-800 underline"
-          >
-            official Rivery Blueprint documentation
-          </a>.
-        </p>
-       
-        
+      </div>
+
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+          <p className="text-gray-700 text-sm leading-relaxed">
+            This YAML Builder is designed to help you create and configure your data pipeline without needing to write YAML code manually. It provides a user-friendly interface where you can define your API connections, input parameters, and data processing steps. As you make changes in the interface, the YAML configuration is automatically generated and displayed in the right panel. You can then copy this YAML and paste it directly into the Blueprint editor in your Rivery console to create your data pipeline.
+          </p>
+          <p className="text-gray-700 text-sm mt-4">
+            For complete documentation, please refer to the <a href="https://docs.rivery.io/blueprint" target="_blank" rel="noopener noreferrer" className="text-[#0066CC] hover:text-[#0066CC]/90 underline">official Rivery Blueprint documentation</a>.
+          </p>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           <div className="space-y-8 lg:col-span-3">
             <div className="space-y-4">
-              <div className="bg-white rounded-lg shadow-lg">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                 <div className="p-6 border-b border-gray-200">
                   <div className="flex items-center mb-2">
-                    <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold mr-3">
+                    <div className="w-8 h-8 rounded-full bg-[#0066CC] text-white flex items-center justify-center font-bold mr-3">
                       1
                     </div>
-                    <h2 className="text-xl font-semibold">Connector Configuration</h2>
+                    <h2 className="text-xl font-semibold text-gray-900">Connector Configuration</h2>
                   </div>
                   <p className="text-sm text-gray-600">
                     First, define your API connection details. This includes the base URL and any default headers needed for authentication.
@@ -262,117 +257,30 @@ function App() {
                 </div>
                 <button
                   onClick={() => toggleSection('connector')}
-                  className="w-full p-6 flex justify-between items-center text-left"
+                  className="w-full p-6 flex justify-between items-center text-left text-gray-900 hover:bg-gray-50 transition-colors"
                 >
                   <h2 className="text-xl font-semibold">Connector Configuration</h2>
                   {expandedSections.connector ? <ChevronUp /> : <ChevronDown />}
                 </button>
                 {expandedSections.connector && (
-                  <div className="p-6 pt-0 space-y-6">
+                  <div className="p-6 pt-0">
                     <ConnectorForm
                       connector={config.connector}
                       onUpdate={handleConnectorUpdate}
                     />
-                    <div className="bg-gray-50 p-4 rounded-lg shadow-md">
-                      <button
-                        onClick={() => toggleDocs('connector')}
-                        className="w-full flex justify-between items-center text-left mb-2"
-                      >
-                        <h4 className="font-semibold text-blue-600">Defining the Connector: API Setup & Data Handling                        </h4>
-                        {expandedDocs.connector ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                      </button>
-                      {expandedDocs.connector && (
-                        <div className="space-y-4">
-                          <div>
-                            <p className="text-sm text-gray-600 mb-4">
-                              Sets up API connection details and defines how data should be processed and stored.
-                              The connector configuration is the foundation of your Blueprint:
-                            </p>
-                            <ul className="list-disc text-sm text-gray-600 ml-4 mb-4">
-                              <li className="mb-2">
-                                <strong>name & base_url:</strong>
-                                <ul className="list-circle ml-4 mt-1">
-                                  <li>name: Identifies your connector in the system</li>
-                                  <li>base_url: Root URL for all API endpoints</li>
-                                  <li>Example: https://api.example.com (without trailing slash)</li>
-                                </ul>
-                              </li>
-                              <li className="mb-3">
-                                <strong>variables_metadata:</strong> Configures how data is output and stored:
-                                <ul className="list-circle ml-4 mt-2">
-                                  <li>Defines the format of the output data (e.g., json, csv, parquet)</li>
-                                  <li>Specifies the storage location for the output data</li>
-                                  <li>Links output variables to storage configurations</li>
-                                  <li>Ensures data is processed and stored according to specified formats</li>
-                                </ul>
-                              </li>
-                              <li className="mb-2">
-                                <strong>variables_storages:</strong>
-                                <ul className="list-circle ml-4 mt-1">
-                                  <li>Defines storage locations for your data</li>
-                                  <li>Each storage needs a unique name and type</li>
-                                  <li>Types include: file_system, s3, azure_blob, etc.</li>
-                                  <li>Referenced by variables_metadata for data storage</li>
-                                </ul>
-                              </li>
-                            </ul>
-                          </div>
-
-                          <div className="bg-blue-50 p-3 rounded mb-4">
-                            <p className="text-sm text-blue-800">
-                              <strong>Important:</strong> The variables_metadata section is crucial for ensuring that data is correctly formatted and stored. 
-                              It acts as a bridge between your API data and storage system, enabling automatic data processing.
-                            </p>
-                          </div>
-
-                          <div>
-                            <h5 className="font-medium text-gray-700 mb-2">Example Configuration:</h5>
-                            <pre className="bg-gray-100 p-3 rounded text-sm overflow-x-auto">
-{`connector:
-  name: "Rivery API"              # Unique identifier for your connector
-  base_url: "https://api.example.com"  # Root URL for all endpoints
-  
-  variables_metadata:             
-    final_output_file:           # Example variable for data processing
-      format: "json"             # Supported: json, csv, parquet
-      storage_name: "results dir" # Must match a storage name
-  
-  variables_storages:            
-    - name: "results dir"        # Referenced by storage_name above
-      type: "file_system"        # Storage system type
-    - name: "backup_storage"     # Additional storage example
-      type: "s3"                 # Cloud storage option`}
-                            </pre>
-                          </div>
-                        </div>
-                      )}
-                    </div>
                   </div>
                 )}
               </div>
             </div>
 
             <div className="space-y-4">
-              <div className="bg-white rounded-lg shadow-lg relative">
-                {!isParametersEnabled() && (
-                  <div className="absolute inset-0 bg-gray-100 bg-opacity-75 flex items-center justify-center z-10">
-                    <div className="text-center p-4">
-                      <p className="text-gray-600 mb-2">Complete the Connector Configuration first</p>
-                      <button
-                        onClick={() => toggleSection('connector')}
-                        className="text-blue-500 hover:text-blue-700"
-                      >
-                        Go to Step 1
-                      </button>
-                    </div>
-                  </div>
-                )}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                 <div className="p-6 border-b border-gray-200">
                   <div className="flex items-center mb-2">
-                    <div className={`w-8 h-8 rounded-full ${isParametersEnabled() ? 'bg-blue-500' : 'bg-gray-300'} text-white flex items-center justify-center font-bold mr-3`}>
+                    <div className="w-8 h-8 rounded-full bg-[#0066CC] text-white flex items-center justify-center font-bold mr-3">
                       2
                     </div>
-                    <h2 className="text-xl font-semibold">Interface Parameters</h2>
+                    <h2 className="text-xl font-semibold text-gray-900">Interface Parameters</h2>
                   </div>
                   <p className="text-sm text-gray-600">
                     Next, define the input parameters for your pipeline. These parameters can be used for authentication, filtering data, and customizing API requests.
@@ -380,118 +288,30 @@ function App() {
                 </div>
                 <button
                   onClick={() => toggleSection('parameters')}
-                  className="w-full p-6 flex justify-between items-center text-left"
-                  disabled={!isParametersEnabled()}
+                  className="w-full p-6 flex justify-between items-center text-left text-gray-900 hover:bg-gray-50 transition-colors"
                 >
                   <h2 className="text-xl font-semibold">Interface Parameters</h2>
                   {expandedSections.parameters ? <ChevronUp /> : <ChevronDown />}
                 </button>
                 {expandedSections.parameters && (
-                  <div className="p-6 pt-0 space-y-6">
+                  <div className="p-6 pt-0">
                     <InterfaceParametersForm
                       parameters={config.interface_parameters.section.source}
                       onUpdate={handleParametersUpdate}
                     />
-                    <div className="bg-gray-50 p-4 rounded-lg shadow-md">
-                      <button
-                        onClick={() => toggleDocs('parameters')}
-                        className="w-full flex justify-between items-center text-left mb-2"
-                      >
-                        <h4 className="font-semibold text-blue-600">Defining Dynamic Inputs: Interface Parameters</h4>
-                        {expandedDocs.parameters ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                      </button>
-                      {expandedDocs.parameters && (
-                        <div className="space-y-4">
-                          <div>
-                            <p className="text-sm text-gray-600 mb-4">
-                              Dynamic variables used throughout your Blueprint for API interactions and data handling.
-                              These parameters can be used in endpoints, headers, and query parameters:
-                            </p>
-                            <ul className="list-disc text-sm text-gray-600 ml-4 mb-4">
-                              <li className="mb-2">
-                                <strong>String Parameters:</strong>
-                                <ul className="list-circle ml-4 mt-1">
-                                  <li>Used in API endpoints or query parameters</li>
-                                  <li>Can be referenced using {'{parameter_name}'}</li>
-                                  <li>Example: /api/v1/accounts/{'{account_id}'}</li>
-                                </ul>
-                              </li>
-                              <li className="mb-2">
-                                <strong>Authentication Parameters:</strong>
-                                <ul className="list-circle ml-4 mt-1">
-                                  <li>Bearer Token: JWT or OAuth tokens</li>
-                                  <li>Basic HTTP: Username/password authentication</li>
-                                  <li>API Key: Header or query parameter keys</li>
-                                  <li>All credentials are securely encrypted</li>
-                                </ul>
-                              </li>
-                              <li className="mb-2">
-                                <strong>Date Range Parameters:</strong>
-                                <ul className="list-circle ml-4 mt-1">
-                                  <li>Filter data by time periods</li>
-                                  <li>Supports various date formats</li>
-                                  <li>Can be used for incremental data loads</li>
-                                </ul>
-                              </li>
-                            </ul>
-                          </div>
-
-                          <div>
-                            <h5 className="font-medium text-gray-700 mb-2">Example Configuration:</h5>
-                            <pre className="bg-gray-100 p-3 rounded text-sm overflow-x-auto">
-{`interface_parameters:
-  section:
-    source:
-      - name: "account_id"        # Used in API endpoints
-        type: "string"
-        description: "Account identifier"
-      
-      - name: "Auth"             # Authentication setup
-        type: "authentication"
-        auth_type: "bearer"      # bearer, basic_http, api_key
-        fields:
-          - name: "bearer_token"
-            type: "string"
-            is_encrypted: true    # Secure storage
-      
-      - name: "time_period"      # Date-based filtering
-        type: "date_range"
-        period_type: "date"      # date or datetime
-        format: "YYYY-MM-DD"     # Date format
-        fields:
-          - name: "start_date"   # Range start
-          - name: "end_date"     # Range end`}
-                            </pre>
-                          </div>
-                        </div>
-                      )}
-                    </div>
                   </div>
                 )}
               </div>
             </div>
 
             <div className="space-y-4">
-              <div className="bg-white rounded-lg shadow-lg relative">
-                {!isStepsEnabled() && (
-                  <div className="absolute inset-0 bg-gray-100 bg-opacity-75 flex items-center justify-center z-10">
-                    <div className="text-center p-4">
-                      <p className="text-gray-600 mb-2">Complete the Interface Parameters first</p>
-                      <button
-                        onClick={() => toggleSection('parameters')}
-                        className="text-blue-500 hover:text-blue-700"
-                      >
-                        Go to Step 2
-                      </button>
-                    </div>
-                  </div>
-                )}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                 <div className="p-6 border-b border-gray-200">
                   <div className="flex items-center mb-2">
-                    <div className={`w-8 h-8 rounded-full ${isStepsEnabled() ? 'bg-blue-500' : 'bg-gray-300'} text-white flex items-center justify-center font-bold mr-3`}>
+                    <div className="w-8 h-8 rounded-full bg-[#0066CC] text-white flex items-center justify-center font-bold mr-3">
                       3
                     </div>
-                    <h2 className="text-xl font-semibold">Workflow Steps</h2>
+                    <h2 className="text-xl font-semibold text-gray-900">Workflow Steps</h2>
                   </div>
                   <p className="text-sm text-gray-600">
                     Finally, define your workflow steps. Each step represents an API call and how to process its response. You can add pagination, loops, and data transformations.
@@ -499,14 +319,13 @@ function App() {
                 </div>
                 <button
                   onClick={() => toggleSection('steps')}
-                  className="w-full p-6 flex justify-between items-center text-left"
-                  disabled={!isStepsEnabled()}
+                  className="w-full p-6 flex justify-between items-center text-left text-gray-900 hover:bg-gray-50 transition-colors"
                 >
                   <h2 className="text-xl font-semibold">Workflow Steps</h2>
                   {expandedSections.steps ? <ChevronUp /> : <ChevronDown />}
                 </button>
                 {expandedSections.steps && (
-                  <div className="p-6 pt-0 space-y-6">
+                  <div className="p-6 pt-0">
                     <StepsForm
                       steps={config.steps}
                       onUpdate={handleStepsUpdate}
@@ -517,65 +336,49 @@ function App() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-lg col-span-2">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center mb-2">
-                <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold mr-3">
-                  4
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 sticky top-8">
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center">
+                    <h2 className="text-xl font-semibold text-gray-900">Generated YAML</h2>
+                  </div>
+                  <button
+                    onClick={handleCopy}
+                    className="flex items-center px-2 py-2 bg-[#0066CC] text-white rounded-lg hover:bg-[#0066CC]/90 transition-all"
+                  >
+                    {copied ? <Check size={15} className="mr-2" /> : <Copy size={15} className="mr-2" />}
+                    {copied ? 'Copied!' : 'Copy YAML'}
+                  </button>
                 </div>
-                <h2 className="text-xl font-semibold">Generated YAML</h2>
+                <p className="text-sm text-gray-600">
+                  Your configuration in YAML format. This updates automatically as you make changes.
+                </p>
               </div>
-              <p className="text-sm text-gray-600">
-                Review your configuration in YAML format. Copy this YAML to use in your Rivery Blueprint.
-              </p>
-            </div>
-            <div className="p-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <button
-                  onClick={handleCopy}
-                  className="flex items-center px-3 py-1 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+              <div className="p-6">
+                <SyntaxHighlighter
+                  language="yaml"
+                  style={nightOwl}
+                  customStyle={{
+                    background: '#1a1a2e',
+                    fontSize: '0.875rem',
+                    margin: 0,
+                    borderRadius: '0.5rem',
+                    padding: '1rem'
+                  }}
                 >
-                  {copied ? (
-                    <>
-                      <Check size={16} className="mr-1 text-green-500" />
-                      <span className="text-green-500">Copied!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy size={16} className="mr-1" />
-                      <span>Copy</span>
-                    </>
-                  )}
-                </button>
+                  {yamlOutput}
+                </SyntaxHighlighter>
               </div>
-              <SyntaxHighlighter
-                language="yaml"
-                style={nightOwl}
-                className="rounded-md"
-              >
-                {yamlOutput}
-              </SyntaxHighlighter>
             </div>
           </div>
         </div>
       </div>
 
       {showPopup && (
-        <div className="fixed bottom-4 right-4 bg-blue-600 text-white p-4 rounded-lg shadow-lg max-w-md animate-fade-in">
-          <div className="flex items-start">
-            <div className="flex-grow">
-              <h4 className="font-semibold mb-1">YAML Copied Successfully!</h4>
-              <p className="text-sm">
-                Return to the Blueprint editor and paste (Ctrl+V) the generated YAML to update your configuration.
-              </p>
-            </div>
-            <button 
-              onClick={() => setShowPopup(false)}
-              className="ml-4 text-white hover:text-blue-100"
-            >
-              ×
-            </button>
-          </div>
+        <div className="fixed bottom-4 right-4 bg-[#0066CC] text-white px-6 py-3 rounded-lg shadow-lg flex items-center">
+          <Check size={20} className="mr-2" />
+          YAML copied to clipboard! Paste it in the Blueprint editor in your Rivery console.
         </div>
       )}
     </div>

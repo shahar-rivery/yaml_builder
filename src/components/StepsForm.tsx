@@ -246,9 +246,9 @@ const StepContent: React.FC<{
                         };
                         onUpdate(newSteps);
                       }}
-                      className="flex items-center text-red-500 hover:text-red-700"
+                      className="flex items-center px-4 py-2 bg-[#0066CC] text-white rounded-lg hover:bg-[#0066CC]/90 transition-all"
                     >
-                      <Trash2 size={20} className="mr-1" />
+                      <Trash2 size={20} className="mr-2" />
                       Remove Pagination
                     </button>
                   ) : (
@@ -278,9 +278,9 @@ const StepContent: React.FC<{
                         ],
                         location: 'qs'
                       })}
-                      className="flex items-center text-blue-500 hover:text-blue-700"
+                      className="flex items-center px-4 py-2 bg-[#0066CC] text-white rounded-lg hover:bg-[#0066CC]/90 transition-all"
                     >
-                      <Plus size={20} className="mr-1" />
+                      <Plus size={20} className="mr-2" />
                       Add Pagination
                     </button>
                   )}
@@ -510,13 +510,13 @@ const StepContent: React.FC<{
                 <button
                   onClick={() => addVariableOutput(stepIndex)}
                   disabled={!!step.pagination}
-                  className={`flex items-center ${
+                  className={`flex items-center px-4 py-2 rounded-lg transition-all ${
                     step.pagination 
-                      ? 'text-gray-400 cursor-not-allowed' 
-                      : 'text-blue-500 hover:text-blue-700'
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                      : 'bg-[#0066CC] text-white hover:bg-[#0066CC]/90'
                   }`}
                 >
-                  <Plus size={20} className="mr-1" />
+                  <Plus size={20} className="mr-2" />
                   Add Output
                 </button>
               </div>
