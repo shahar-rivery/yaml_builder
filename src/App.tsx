@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { dump } from 'js-yaml';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { nightOwl } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -119,6 +119,12 @@ function App() {
   const [copied, setCopied] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
 
+  // Track if sections have ever been filled
+  const [hasEverFilled, setHasEverFilled] = useState({
+    parameters: false,
+    steps: false
+  });
+
   const toggleSection = (section: keyof typeof expandedSections) => {
     setExpandedSections(prev => ({
       ...prev,
@@ -178,6 +184,39 @@ function App() {
     }
   });
 
+  const isConnectorValid = () => {
+    return config.connector.name && config.connector.base_url;
+  };
+
+  const isParametersValid = () => {
+    return config.interface_parameters.section.source.length > 0;
+  };
+
+  const isStepsValid = () => {
+    return config.steps.length > 0 && config.steps.every(step => 
+      step.name && step.endpoint
+    );
+  };
+
+  // Update hasEverFilled when config changes
+  useEffect(() => {
+    if (config.interface_parameters.section.source.length > 0) {
+      setHasEverFilled(prev => ({ ...prev, parameters: true }));
+    }
+    if (config.steps.length > 0) {
+      setHasEverFilled(prev => ({ ...prev, steps: true }));
+    }
+  }, [config]);
+
+  // New functions to check if sections should be enabled
+  const isParametersEnabled = () => {
+    return isConnectorValid() || hasEverFilled.parameters;
+  };
+
+  const isStepsEnabled = () => {
+    return (isParametersValid() || hasEverFilled.parameters) && (isConnectorValid() || hasEverFilled.parameters);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 relative">
       <div className="container mx-auto px-4 py-8">
@@ -210,6 +249,17 @@ function App() {
           <div className="space-y-8 lg:col-span-3">
             <div className="space-y-4">
               <div className="bg-white rounded-lg shadow-lg">
+                <div className="p-6 border-b border-gray-200">
+                  <div className="flex items-center mb-2">
+                    <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold mr-3">
+                      1
+                    </div>
+                    <h2 className="text-xl font-semibold">Connector Configuration</h2>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    First, define your API connection details. This includes the base URL and any default headers needed for authentication.
+                  </p>
+                </div>
                 <button
                   onClick={() => toggleSection('connector')}
                   className="w-full p-6 flex justify-between items-center text-left"
@@ -303,17 +353,41 @@ function App() {
             </div>
 
             <div className="space-y-4">
-              <div className="bg-white rounded-lg shadow-lg">
+              <div className="bg-white rounded-lg shadow-lg relative">
+                {!isParametersEnabled() && (
+                  <div className="absolute inset-0 bg-gray-100 bg-opacity-75 flex items-center justify-center z-10">
+                    <div className="text-center p-4">
+                      <p className="text-gray-600 mb-2">Complete the Connector Configuration first</p>
+                      <button
+                        onClick={() => toggleSection('connector')}
+                        className="text-blue-500 hover:text-blue-700"
+                      >
+                        Go to Step 1
+                      </button>
+                    </div>
+                  </div>
+                )}
+                <div className="p-6 border-b border-gray-200">
+                  <div className="flex items-center mb-2">
+                    <div className={`w-8 h-8 rounded-full ${isParametersEnabled() ? 'bg-blue-500' : 'bg-gray-300'} text-white flex items-center justify-center font-bold mr-3`}>
+                      2
+                    </div>
+                    <h2 className="text-xl font-semibold">Interface Parameters</h2>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Next, define the input parameters for your pipeline. These parameters can be used for authentication, filtering data, and customizing API requests.
+                  </p>
+                </div>
                 <button
                   onClick={() => toggleSection('parameters')}
                   className="w-full p-6 flex justify-between items-center text-left"
+                  disabled={!isParametersEnabled()}
                 >
                   <h2 className="text-xl font-semibold">Interface Parameters</h2>
                   {expandedSections.parameters ? <ChevronUp /> : <ChevronDown />}
                 </button>
                 {expandedSections.parameters && (
                   <div className="p-6 pt-0 space-y-6">
-                    <p className="text-sm text-gray-600 mb-4">Define the input parameters for your pipeline. These parameters can be used for authentication, filtering data, and customizing API requests.</p>
                     <InterfaceParametersForm
                       parameters={config.interface_parameters.section.source}
                       onUpdate={handleParametersUpdate}
@@ -398,10 +472,35 @@ function App() {
             </div>
 
             <div className="space-y-4">
-              <div className="bg-white rounded-lg shadow-lg">
+              <div className="bg-white rounded-lg shadow-lg relative">
+                {!isStepsEnabled() && (
+                  <div className="absolute inset-0 bg-gray-100 bg-opacity-75 flex items-center justify-center z-10">
+                    <div className="text-center p-4">
+                      <p className="text-gray-600 mb-2">Complete the Interface Parameters first</p>
+                      <button
+                        onClick={() => toggleSection('parameters')}
+                        className="text-blue-500 hover:text-blue-700"
+                      >
+                        Go to Step 2
+                      </button>
+                    </div>
+                  </div>
+                )}
+                <div className="p-6 border-b border-gray-200">
+                  <div className="flex items-center mb-2">
+                    <div className={`w-8 h-8 rounded-full ${isStepsEnabled() ? 'bg-blue-500' : 'bg-gray-300'} text-white flex items-center justify-center font-bold mr-3`}>
+                      3
+                    </div>
+                    <h2 className="text-xl font-semibold">Workflow Steps</h2>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Finally, define your workflow steps. Each step represents an API call and how to process its response. You can add pagination, loops, and data transformations.
+                  </p>
+                </div>
                 <button
                   onClick={() => toggleSection('steps')}
                   className="w-full p-6 flex justify-between items-center text-left"
+                  disabled={!isStepsEnabled()}
                 >
                   <h2 className="text-xl font-semibold">Workflow Steps</h2>
                   {expandedSections.steps ? <ChevronUp /> : <ChevronDown />}
@@ -412,84 +511,6 @@ function App() {
                       steps={config.steps}
                       onUpdate={handleStepsUpdate}
                     />
-                    <div className="bg-gray-50 p-4 rounded-lg shadow-md">
-                      <button
-                        onClick={() => toggleDocs('steps')}
-                        className="w-full flex justify-between items-center text-left mb-2"
-                      >
-                        <h4 className="font-semibold text-blue-600">Building the Flow: Step Configuration Explained</h4>
-                        {expandedDocs.steps ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                      </button>
-                      {expandedDocs.steps && (
-                        <div className="space-y-4">
-                          <div>
-                            <p className="text-sm text-gray-600 mb-4">
-                              Steps define the sequence of API calls and how to process their responses. 
-                              Each step represents an API interaction and its data handling:
-                            </p>
-                            <ul className="list-disc text-sm text-gray-600 ml-4 mb-4">
-                              <li className="mb-2">
-                                <strong>Step Details:</strong>
-                                <ul className="list-circle ml-4 mt-1">
-                                  <li>name: Identifies the step in logs and monitoring</li>
-                                  <li>type: Usually "rest" for REST API calls</li>
-                                  <li>description: Helps document the step's purpose</li>
-                                  <li>http_method: GET, POST, PUT, DELETE, etc.</li>
-                                </ul>
-                              </li>
-                              <li className="mb-2">
-                                <strong>Endpoint Configuration:</strong>
-                                <ul className="list-circle ml-4 mt-1">
-                                  <li>endpoint: API path relative to base_url</li>
-                                  <li>Can include parameter variables: /api/{'{param}'}</li>
-                                  <li>Supports query parameters</li>
-                                  <li>Can include multiple parameters</li>
-                                </ul>
-                              </li>
-                              <li className="mb-2">
-                                <strong>Variables Output:</strong>
-                                <ul className="list-circle ml-4 mt-1">
-                                  <li>response_location: Path to data in response</li>
-                                  <li>variable_name: Where to store the data</li>
-                                  <li>variable_format: How to format the data</li>
-                                  <li>Use final_output_file to save to storage</li>
-                                </ul>
-                              </li>
-                            </ul>
-
-                            <div className="bg-yellow-50 p-3 rounded mb-4">
-                              <p className="text-sm text-yellow-800">
-                                <strong>Tip:</strong> When using <code>final_output_file</code> in steps:
-                              </p>
-                              <ul className="list-disc text-sm text-yellow-800 ml-4 mt-2">
-                                <li>The engine will automatically handle data schema creation</li>
-                                <li>Data types will be inferred from the response</li>
-                                <li>Data will be stored in the configured storage location</li>
-                                <li>Multiple steps can write to the same output file</li>
-                              </ul>
-                            </div>
-                          </div>
-
-                          <div>
-                            <h5 className="font-medium text-gray-700 mb-2">Example Configuration:</h5>
-                            <pre className="bg-gray-100 p-3 rounded text-sm overflow-x-auto">
-{`steps:
-  - name: "Get Account Data"     # Step identifier
-    description: "Fetch account information"
-    type: "rest"                # API call type
-    http_method: "GET"          # HTTP method
-    endpoint: "/api/v1/accounts/{account_id}"  # Using parameter
-    variables_output:
-      - response_location: "data.accounts"  # JSON path to data
-        variable_name: "final_output_file"  # Save to storage
-        variable_format: "json"             # Output format
-
-`}
-                            </pre>
-                          </div>
-                        </div>
-                      )}
-                    </div>
                   </div>
                 )}
               </div>
@@ -497,46 +518,44 @@ function App() {
           </div>
 
           <div className="bg-white rounded-lg shadow-lg col-span-2">
-            <div className="p-6 flex justify-between items-center">
-              <button
-                onClick={() => toggleSection('yaml')}
-                className="flex-grow text-left flex items-center"
-              >
-                <h2 className="text-xl font-semibold">Generated YAML</h2>
-                {expandedSections.yaml ? <ChevronUp className="ml-2" /> : <ChevronDown className="ml-2" />}
-              </button>
-              {expandedSections.yaml && (
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={handleCopy}
-                    className="flex items-center px-3 py-1 text-sm text-gray-600 hover:text-gray-800 transition-colors"
-                  >
-                    {copied ? (
-                      <>
-                        <Check size={16} className="mr-1 text-green-500" />
-                        <span className="text-green-500">Copied!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy size={16} className="mr-1" />
-                        <span>Copy</span>
-                      </>
-                    )}
-                  </button>
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center mb-2">
+                <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold mr-3">
+                  4
                 </div>
-              )}
-            </div>
-            {expandedSections.yaml && (
-              <div className="p-6 pt-0">
-                <SyntaxHighlighter
-                  language="yaml"
-                  style={nightOwl}
-                  className="rounded-md"
-                >
-                  {yamlOutput}
-                </SyntaxHighlighter>
+                <h2 className="text-xl font-semibold">Generated YAML</h2>
               </div>
-            )}
+              <p className="text-sm text-gray-600">
+                Review your configuration in YAML format. Copy this YAML to use in your Rivery Blueprint.
+              </p>
+            </div>
+            <div className="p-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <button
+                  onClick={handleCopy}
+                  className="flex items-center px-3 py-1 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                >
+                  {copied ? (
+                    <>
+                      <Check size={16} className="mr-1 text-green-500" />
+                      <span className="text-green-500">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={16} className="mr-1" />
+                      <span>Copy</span>
+                    </>
+                  )}
+                </button>
+              </div>
+              <SyntaxHighlighter
+                language="yaml"
+                style={nightOwl}
+                className="rounded-md"
+              >
+                {yamlOutput}
+              </SyntaxHighlighter>
+            </div>
           </div>
         </div>
       </div>

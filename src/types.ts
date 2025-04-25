@@ -106,6 +106,6 @@ export interface YAMLConfig {
   interface_parameters: {
     section: Section;
   };
-  connector: Connector[];
+  connector: Connector;
   steps: Step[];
 }

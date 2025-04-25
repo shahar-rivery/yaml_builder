@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { PlusCircle, Trash2 } from 'lucide-react';
 
 export type AuthType = 'bearer' | 'basic_http' | 'api_key';
@@ -27,8 +27,26 @@ interface Props {
 }
 
 export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
+  // Add state for the default parameter form
+  const [defaultParameter, setDefaultParameter] = useState<Parameter>({
+    name: '',
+    type: 'string'
+  });
+
   const addParameter = () => {
-    onUpdate([...parameters, { name: '', type: 'string' }]);
+    if (defaultParameter.name) {
+      onUpdate([...parameters, defaultParameter]);
+      // Reset the default parameter form with all fields
+      setDefaultParameter({
+        name: '',
+        type: 'string',
+        auth_type: undefined,
+        period_type: undefined,
+        format: undefined,
+        location: undefined,
+        fields: undefined
+      });
+    }
   };
 
   const removeParameter = (index: number) => {
@@ -83,8 +101,183 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
     onUpdate(newParameters);
   };
 
+  const updateDefaultParameter = (field: string, value: any) => {
+    const newDefaultParameter = { ...defaultParameter, [field]: value };
+
+    // Set default fields based on parameter type
+    if (field === 'type') {
+      if (value === 'authentication') {
+        newDefaultParameter.auth_type = 'bearer';
+        newDefaultParameter.fields = [
+          { name: 'bearer_token', type: 'string', is_encrypted: true }
+        ];
+      } else if (value === 'date_range') {
+        newDefaultParameter.period_type = 'date';
+        newDefaultParameter.format = 'YYYY-MM-DD';
+        newDefaultParameter.fields = [
+          { name: 'start_date', value: '' },
+          { name: 'end_date', value: '' }
+        ];
+      }
+    }
+
+    if (field === 'auth_type') {
+      switch (value) {
+        case 'bearer':
+          newDefaultParameter.fields = [
+            { name: 'bearer_token', type: 'string', is_encrypted: true }
+          ];
+          break;
+        case 'basic_http':
+          newDefaultParameter.fields = [
+            { name: 'username', type: 'string' },
+            { name: 'password', type: 'string', is_encrypted: true }
+          ];
+          break;
+        case 'api_key':
+          newDefaultParameter.fields = [
+            { name: 'key_name', type: 'string' },
+            { name: 'key_value', type: 'string', is_encrypted: true }
+          ];
+          break;
+      }
+    }
+
+    setDefaultParameter(newDefaultParameter);
+  };
+
   return (
     <div className="space-y-4">
+      {/* Default Parameter Form */}
+      <div className="space-y-4 p-4 border rounded-lg bg-gray-50">
+        <h3 className="text-sm font-medium text-gray-700">New Parameter</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Parameter Name
+              <span className="ml-1 text-xs text-gray-500">
+                (Unique identifier for this parameter)
+              </span>
+            </label>
+            <input
+              type="text"
+              placeholder="e.g., account_id"
+              value={defaultParameter.name}
+              onChange={(e) => updateDefaultParameter('name', e.target.value)}
+              className="border rounded p-2 w-full"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Parameter Type
+              <span className="ml-1 text-xs text-gray-500">
+                (Type of parameter: string, authentication, or date_range)
+              </span>
+            </label>
+            <select
+              value={defaultParameter.type}
+              onChange={(e) => updateDefaultParameter('type', e.target.value)}
+              className="border rounded p-2 w-full"
+            >
+              <option value="string">String</option>
+              <option value="authentication">Authentication</option>
+              <option value="date_range">Date Range</option>
+            </select>
+          </div>
+        </div>
+
+        {defaultParameter.type === 'authentication' && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Authentication Type
+                <span className="ml-1 text-xs text-gray-500">
+                  (Method of authentication)
+                </span>
+              </label>
+              <select
+                value={defaultParameter.auth_type}
+                onChange={(e) => updateDefaultParameter('auth_type', e.target.value)}
+                className="border rounded p-2 w-full"
+              >
+                <option value="bearer">Bearer Token</option>
+                <option value="basic_http">Basic HTTP</option>
+                <option value="api_key">API Key</option>
+              </select>
+            </div>
+
+            {defaultParameter.auth_type === 'api_key' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  API Key Location
+                  <span className="ml-1 text-xs text-gray-500">
+                    (Where to place the API key)
+                  </span>
+                </label>
+                <select
+                  value={defaultParameter.location}
+                  onChange={(e) => updateDefaultParameter('location', e.target.value)}
+                  className="border rounded p-2 w-full"
+                >
+                  <option value="header">Header</option>
+                  <option value="query_param">Query Parameter</option>
+                </select>
+              </div>
+            )}
+          </div>
+        )}
+
+        {defaultParameter.type === 'date_range' && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Period Type
+                <span className="ml-1 text-xs text-gray-500">
+                  (Format of the date values)
+                </span>
+              </label>
+              <select
+                value={defaultParameter.period_type}
+                onChange={(e) => updateDefaultParameter('period_type', e.target.value)}
+                className="border rounded p-2 w-full"
+              >
+                <option value="date">Date</option>
+                <option value="datetime">DateTime</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Date Format
+                <span className="ml-1 text-xs text-gray-500">
+                  (e.g., YYYY-MM-DD for dates)
+                </span>
+              </label>
+              <input
+                type="text"
+                placeholder="YYYY-MM-DD"
+                value={defaultParameter.format}
+                onChange={(e) => updateDefaultParameter('format', e.target.value)}
+                className="border rounded p-2 w-full"
+              />
+            </div>
+          </div>
+        )}
+
+        <button
+          onClick={addParameter}
+          disabled={!defaultParameter.name}
+          className={`flex items-center px-4 py-2 rounded-md ${
+            defaultParameter.name 
+              ? 'bg-blue-500 text-white hover:bg-blue-600' 
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+          }`}
+        >
+          <PlusCircle size={20} className="mr-2" />
+          Add Parameter
+        </button>
+      </div>
+
+      {/* Existing Parameters */}
       {parameters.map((param, index) => (
         <div key={index} className="space-y-4 p-4 border rounded-lg">
           <div className="flex justify-between">
@@ -244,13 +437,6 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
           </div>
         </div>
       ))}
-      <button
-        onClick={addParameter}
-        className="flex items-center text-blue-500 hover:text-blue-700"
-      >
-        <PlusCircle size={20} className="mr-2" />
-        Add Parameter
-      </button>
     </div>
   );
 }
