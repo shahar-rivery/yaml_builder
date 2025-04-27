@@ -7,6 +7,7 @@ import { InterfaceParametersForm } from './components/InterfaceParametersForm';
 import { ConnectorForm } from './components/ConnectorForm';
 import { StepsForm } from './components/StepsForm';
 import { FileText, ChevronDown, ChevronUp, Copy, Check, HelpCircle } from 'lucide-react';
+import { validateAndFormatYAML } from './utils/yamlUtils';
 
 function App() {
   const [config, setConfig] = useState<YAMLConfig>({
@@ -125,6 +126,9 @@ function App() {
     steps: false
   });
 
+  const [yamlOutput, setYamlOutput] = useState('');
+  const [yamlError, setYamlError] = useState<string | undefined>(undefined);
+
   const toggleSection = (section: keyof typeof expandedSections) => {
     setExpandedSections(prev => ({
       ...prev,
@@ -170,19 +174,122 @@ function App() {
     }
   };
 
-  const yamlOutput = dump({
-    interface_parameters: config.interface_parameters,
-    connector: config.connector,
-    steps: config.steps
-  }, {
-    indent: 2,
-    lineWidth: -1,
-    noRefs: true,
-    sortKeys: false,
-    styles: {
-      '!!null': 'empty'
+  const generateYAML = () => {
+    const yamlString = dump({
+      interface_parameters: config.interface_parameters,
+      connector: config.connector,
+      steps: config.steps.map(step => {
+        if (step.pagination) {
+          // Create a new step object without variables_output
+          const { variables_output, ...stepWithoutVars } = step;
+          
+          // Create the pagination object with variables_output
+          const paginationWithVars = {
+            ...step.pagination,
+            parameters: step.pagination.parameters ? step.pagination.parameters.map(param => {
+              if (param.name === 'per_page' || param.name === 'limit') {
+                const { increment_by, ...paramWithoutIncrement } = param;
+                return paramWithoutIncrement;
+              }
+              return param;
+            }) : undefined,
+            variables_output: [
+              {
+                response_location: "data",
+                variable_name: "next_page",
+                overwrite_storage: true,
+                variable_format: "json",
+                transformation_layers: [
+                  {
+                    type: "extract_json",
+                    json_path: "$.next_page",
+                    from_type: "json"
+                  }
+                ]
+              },
+              {
+                response_location: "data",
+                variable_name: "rivers",
+                variable_format: "json",
+                transformation_layers: [
+                  {
+                    type: "extract_json",
+                    json_path: "$.items[*].river_cross_id",
+                    from_type: "json"
+                  }
+                ]
+              }
+            ]
+          };
+
+          // Return a new object with pagination containing variables_output
+          return {
+            ...stepWithoutVars,
+            pagination: paginationWithVars
+          };
+        }
+        return step;
+      })
+    }, {
+      indent: 2,
+      lineWidth: -1,
+      noRefs: true,
+      sortKeys: false,
+      styles: {
+        '!!null': 'empty'
+      }
+    });
+
+    const formattedYaml = yamlString
+      .split('\n')
+      .map((line, index, array) => {
+        // Find if we're inside a pagination block by looking at previous lines
+        const paginationStartIndex = array.slice(0, index).findIndex(l => 
+          l.trim() === 'pagination:'
+        );
+        const isInPagination = paginationStartIndex !== -1;
+
+        // Find if we're inside variables_output block
+        const variablesOutputStartIndex = array.slice(paginationStartIndex, index).findIndex(l => 
+          l.trim() === 'variables_output:'
+        );
+        const isInVariablesOutput = variablesOutputStartIndex !== -1;
+
+        // If we're in pagination and either on variables_output line or inside its block
+        if (isInPagination && (line.trim() === 'variables_output:' || isInVariablesOutput)) {
+          // Remove exactly 2 spaces from the beginning if they exist
+          const match = line.match(/^(\s+)/);
+          if (match && match[1].length >= 2) {
+            return line.slice(2);
+          }
+        }
+        
+        return line;
+      })
+      .join('\n');
+
+    // Add indentation reference comment
+    const yamlWithReference = `# Indentation Reference:
+# 0 spaces: root level
+# 2 spaces: first level (interface_parameters, connector, steps)
+# 4 spaces: second level (section, name, base_url, etc.)
+# 6 spaces: third level (source, default_headers, etc.)
+# 8 spaces: fourth level (variables_output, transformation_layers, etc.)
+# 10 spaces: fifth level (response_location, variable_name, etc.)
+
+${formattedYaml}`;
+
+    const validationResult = validateAndFormatYAML(yamlWithReference);
+    
+    if (!validationResult.isValid) {
+      setYamlOutput(yamlString);
+      setYamlError(validationResult.error);
+      return;
     }
-  });
+    
+    setYamlOutput(validationResult.formattedYAML || yamlWithReference);
+    setYamlError(undefined);
+  };
 
   const isConnectorValid = () => {
     return config.connector.name && config.connector.base_url;
@@ -206,6 +313,11 @@ function App() {
     if (config.steps.length > 0) {
       setHasEverFilled(prev => ({ ...prev, steps: true }));
     }
+  }, [config]);
+
+  // Generate YAML whenever config changes
+  useEffect(() => {
+    generateYAML();
   }, [config]);
 
   // New functions to check if sections should be enabled
@@ -345,15 +457,20 @@ function App() {
                   </div>
                   <button
                     onClick={handleCopy}
-                    className="flex items-center px-2 py-2 bg-[#0066CC] text-white rounded-lg hover:bg-[#0066CC]/90 transition-all"
+                    className="flex items-center px-4 py-2 bg-[#0066CC] text-white rounded-lg hover:bg-[#0066CC]/90 transition-all"
                   >
-                    {copied ? <Check size={15} className="mr-2" /> : <Copy size={15} className="mr-2" />}
+                    {copied ? <Check size={20} className="mr-2" /> : <Copy size={20} className="mr-2" />}
                     {copied ? 'Copied!' : 'Copy YAML'}
                   </button>
                 </div>
                 <p className="text-sm text-gray-600">
                   Your configuration in YAML format. This updates automatically as you make changes.
                 </p>
+                {yamlError && (
+                  <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-sm text-red-600">{yamlError}</p>
+                  </div>
+                )}
               </div>
               <div className="p-6">
                 <SyntaxHighlighter

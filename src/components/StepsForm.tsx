@@ -263,7 +263,7 @@ const StepContent: React.FC<{
                           },
                           {
                             name: 'per_page',
-                            value: 0,
+                            value: 100,
                             increment_by: 0
                           }
                         ],
@@ -359,17 +359,20 @@ const StepContent: React.FC<{
                     <div>
                       <label className="block text-sm font-medium mb-1">
                         Location
-                        <span className="ml-1 text-xs text-gray-500">(Where to add pagination: 'qs' for query string, 'body' for request body)</span>
+                        <span className="ml-1 text-xs text-gray-500">(Where to add pagination parameters)</span>
                       </label>
-                      <input
-                        type="text"
+                      <select
                         value={step.pagination.location}
                         onChange={(e) => handlePaginationChange(stepIndex, {
                           ...step.pagination!,
-                          location: e.target.value
+                          location: e.target.value as 'qs' | 'header' | 'body'
                         })}
                         className="w-full px-3 py-2 border rounded-md"
-                      />
+                      >
+                        <option value="qs">Query String</option>
+                        <option value="header">Header</option>
+                        <option value="body">Request Body</option>
+                      </select>
                     </div>
                   </div>
 
@@ -435,21 +438,25 @@ const StepContent: React.FC<{
                             />
                           </div>
                           <div>
-                            <label className="block text-xs font-medium mb-1">Increment By</label>
-                            <input
-                              type="number"
-                              value={param.increment_by}
-                              onChange={(e) => {
-                                const newParams = [...step.pagination!.parameters];
-                                newParams[paramIndex] = { ...param, increment_by: parseInt(e.target.value) };
-                                handlePaginationChange(stepIndex, {
-                                  ...step.pagination!,
-                                  parameters: newParams
-                                });
-                              }}
-                              className="w-full px-2 py-1 text-sm border rounded-md"
-                              placeholder="How much to increase by"
-                            />
+                            {param.name !== 'per_page' && (
+                              <>
+                                <label className="block text-xs font-medium mb-1">Increment By</label>
+                                <input
+                                  type="number"
+                                  value={param.increment_by}
+                                  onChange={(e) => {
+                                    const newParams = [...step.pagination!.parameters];
+                                    newParams[paramIndex] = { ...param, increment_by: parseInt(e.target.value) };
+                                    handlePaginationChange(stepIndex, {
+                                      ...step.pagination!,
+                                      parameters: newParams
+                                    });
+                                  }}
+                                  className="w-full px-2 py-1 text-sm border rounded-md"
+                                  placeholder="How much to increase by"
+                                />
+                              </>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -644,10 +651,10 @@ const StepContent: React.FC<{
               <button
                 onClick={() => addNestedLoopStep(stepIndex)}
                 disabled={nextStepIsLoop}
-                className={`px-4 py-2 rounded-md transition-colors shadow-sm ${
+                className={`px-4 py-2 rounded-lg transition-all ${
                   nextStepIsLoop
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-blue-500 text-white hover:bg-blue-600 hover:shadow-md'
+                    : 'bg-[#0066CC] text-white hover:bg-[#0066CC]/90'
                 }`}
               >
                 + Add Loop Block
