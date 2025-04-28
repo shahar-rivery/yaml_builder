@@ -150,7 +150,16 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
     <div className="space-y-4">
       {/* Default Parameter Form */}
       <div className="space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
-        <h3 className="text-sm font-medium text-gray-900">New Parameter</h3>
+        <div className="flex justify-between items-center">
+          <h3 className="text-sm font-medium text-gray-900">New Parameter</h3>
+          <button
+            onClick={addParameter}
+            className="flex items-center px-4 py-2 rounded-lg bg-[#0066CC] text-white hover:bg-[#0066CC]/90"
+          >
+            <PlusCircle size={20} className="mr-2" />
+            Add Parameter
+          </button>
+        </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -164,7 +173,7 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
               placeholder="e.g., account_id"
               value={defaultParameter.name}
               onChange={(e) => updateDefaultParameter('name', e.target.value)}
-              className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#E94E77] focus:border-[#E94E77]"
+              className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#0066CC] focus:border-[#0066CC]"
             />
           </div>
           <div>
@@ -177,7 +186,7 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
             <select
               value={defaultParameter.type}
               onChange={(e) => updateDefaultParameter('type', e.target.value)}
-              className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full focus:outline-none focus:ring-1 focus:ring-[#E94E77] focus:border-[#E94E77]"
+              className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full focus:outline-none focus:ring-1 focus:ring-[#0066CC] focus:border-[#0066CC]"
             >
               <option value="string">String</option>
               <option value="authentication">Authentication</option>
@@ -198,7 +207,7 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
               <select
                 value={defaultParameter.auth_type}
                 onChange={(e) => updateDefaultParameter('auth_type', e.target.value)}
-                className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full focus:outline-none focus:ring-1 focus:ring-[#E94E77] focus:border-[#E94E77]"
+                className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full focus:outline-none focus:ring-1 focus:ring-[#0066CC] focus:border-[#0066CC]"
               >
                 <option value="bearer">Bearer Token</option>
                 <option value="basic_http">Basic HTTP</option>
@@ -217,7 +226,7 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
                 <select
                   value={defaultParameter.location}
                   onChange={(e) => updateDefaultParameter('location', e.target.value)}
-                  className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full focus:outline-none focus:ring-1 focus:ring-[#E94E77] focus:border-[#E94E77]"
+                  className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full focus:outline-none focus:ring-1 focus:ring-[#0066CC] focus:border-[#0066CC]"
                 >
                   <option value="header">Header</option>
                   <option value="query_param">Query Parameter</option>
@@ -239,7 +248,7 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
               <select
                 value={defaultParameter.period_type}
                 onChange={(e) => updateDefaultParameter('period_type', e.target.value)}
-                className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full focus:outline-none focus:ring-1 focus:ring-[#E94E77] focus:border-[#E94E77]"
+                className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full focus:outline-none focus:ring-1 focus:ring-[#0066CC] focus:border-[#0066CC]"
               >
                 <option value="date">Date</option>
                 <option value="datetime">DateTime</option>
@@ -257,24 +266,11 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
                 placeholder="YYYY-MM-DD"
                 value={defaultParameter.format}
                 onChange={(e) => updateDefaultParameter('format', e.target.value)}
-                className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#E94E77] focus:border-[#E94E77]"
+                className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#0066CC] focus:border-[#0066CC]"
               />
             </div>
           </div>
         )}
-
-        <button
-          onClick={addParameter}
-          disabled={!defaultParameter.name}
-          className={`flex items-center px-4 py-2 rounded-lg ${
-            defaultParameter.name 
-              ? 'bg-[#E94E77] text-white hover:bg-[#E94E77]/90' 
-              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-          }`}
-        >
-          <PlusCircle size={20} className="mr-2" />
-          Add Parameter
-        </button>
       </div>
 
       {/* Existing Parameters */}
@@ -295,7 +291,7 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
                     placeholder="e.g., account_id"
                     value={param.name}
                     onChange={(e) => updateParameter(index, 'name', e.target.value)}
-                    className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#E94E77] focus:border-[#E94E77]"
+                    className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#0066CC] focus:border-[#0066CC]"
                   />
                 </div>
                 <div>
@@ -308,7 +304,7 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
                   <select
                     value={param.type}
                     onChange={(e) => updateParameter(index, 'type', e.target.value)}
-                    className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full focus:outline-none focus:ring-1 focus:ring-[#E94E77] focus:border-[#E94E77]"
+                    className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full focus:outline-none focus:ring-1 focus:ring-[#0066CC] focus:border-[#0066CC]"
                   >
                     <option value="string">String</option>
                     <option value="authentication">Authentication</option>
@@ -329,7 +325,7 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
                     <select
                       value={param.auth_type}
                       onChange={(e) => updateParameter(index, 'auth_type', e.target.value)}
-                      className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full focus:outline-none focus:ring-1 focus:ring-[#E94E77] focus:border-[#E94E77]"
+                      className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full focus:outline-none focus:ring-1 focus:ring-[#0066CC] focus:border-[#0066CC]"
                     >
                       <option value="bearer">Bearer Token</option>
                       <option value="basic_http">Basic HTTP</option>
@@ -348,7 +344,7 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
                       <select
                         value={param.location}
                         onChange={(e) => updateParameter(index, 'location', e.target.value)}
-                        className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full focus:outline-none focus:ring-1 focus:ring-[#E94E77] focus:border-[#E94E77]"
+                        className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full focus:outline-none focus:ring-1 focus:ring-[#0066CC] focus:border-[#0066CC]"
                       >
                         <option value="header">Header</option>
                         <option value="query_param">Query Parameter</option>
@@ -370,7 +366,7 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
                     <select
                       value={param.period_type}
                       onChange={(e) => updateParameter(index, 'period_type', e.target.value)}
-                      className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full focus:outline-none focus:ring-1 focus:ring-[#E94E77] focus:border-[#E94E77]"
+                      className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full focus:outline-none focus:ring-1 focus:ring-[#0066CC] focus:border-[#0066CC]"
                     >
                       <option value="date">Date</option>
                       <option value="datetime">DateTime</option>
@@ -388,7 +384,7 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
                       placeholder="YYYY-MM-DD"
                       value={param.format}
                       onChange={(e) => updateParameter(index, 'format', e.target.value)}
-                      className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#E94E77] focus:border-[#E94E77]"
+                      className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 w-full placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#0066CC] focus:border-[#0066CC]"
                     />
                   </div>
                 </div>
@@ -420,7 +416,7 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
                             newFields[fieldIndex] = { ...field, value: e.target.value };
                             updateParameter(index, 'fields', newFields);
                           }}
-                          className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#E94E77] focus:border-[#E94E77]"
+                          className="bg-white border border-gray-300 text-gray-900 rounded-lg p-2 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#0066CC] focus:border-[#0066CC]"
                         />
                       </div>
                     </div>
@@ -430,7 +426,7 @@ export function InterfaceParametersForm({ parameters, onUpdate }: Props) {
             </div>
             <button
               onClick={() => removeParameter(index)}
-              className="ml-4 text-gray-400 hover:text-[#E94E77] transition-colors"
+              className="ml-4 text-gray-400 hover:text-red-500 transition-colors"
             >
               <Trash2 size={20} />
             </button>
