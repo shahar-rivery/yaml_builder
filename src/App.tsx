@@ -348,7 +348,7 @@ ${formattedYaml}`;
             This YAML Builder is designed to help you create and configure your data pipeline without needing to write YAML code manually. It provides a user-friendly interface where you can define your API connections, input parameters, and data processing steps. As you make changes in the interface, the YAML configuration is automatically generated and displayed in the right panel. You can then copy this YAML and paste it directly into the Blueprint editor in your Rivery console to create your data pipeline.
           </p>
           <p className="text-gray-700 text-sm mt-4">
-            For complete documentation, please refer to the <a href="https://docs.rivery.io/blueprint" target="_blank" rel="noopener noreferrer" className="text-[#0066CC] hover:text-[#0066CC]/90 underline">official Rivery Blueprint documentation</a>.
+            For complete documentation, please refer to the <a href="https://help.boomi.com/docs/Atomsphere/Data_Integration/Blueprint/blueprint-intro" target="_blank" rel="noopener noreferrer" className="text-[#0066CC] hover:text-[#0066CC]/90 underline">official Rivery Blueprint documentation</a>.
           </p>
         </div>
 
